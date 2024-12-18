@@ -23,7 +23,7 @@ namespace WebApplication1.Controllers
 
         static readonly string forwordURL = @"https://car-rental-api-chezbchwebfggwcd.canadacentral-01.azurewebsites.net";
         private readonly HttpClient _httpClient;
-        private string token = "";
+        private string? token = null;
         static readonly string login = "JejRental";
         static readonly string password = "q3409tg-hoij";
         //public CarController(ApiContext context)
@@ -34,12 +34,17 @@ namespace WebApplication1.Controllers
         public CarController(HttpClient httpClient)
         {
             _httpClient = httpClient;
-            //GetToken();
+            //Task<string> task = Task<string>.Run(async () => await GetToken());
+            //token = task.Result;
         }
         
-        public async void GetToken()
+        public async Task<string> GetToken()
         {
-            var creds = new LoginToDto() { Username = login, Password = password };
+            var creds = new Dictionary<string, string>
+            {
+                { "Username", login },
+                { "Password", password },
+            };
 
             string json = JsonConvert.SerializeObject(creds);
 
@@ -47,12 +52,41 @@ namespace WebApplication1.Controllers
 
             var httpResponse = await _httpClient.PostAsync(forwordURL + "/api/auth/login", httpContent);
 
-            var responseContent = await httpResponse.Content.ReadFromJsonAsync<LoginResponseFromDto>();
+            //var responseContent = await httpResponse.Content.ReadFromJsonAsync<LoginResponseFromDto>();
+
+            var responseContent = await httpResponse.Content.ReadAsStringAsync();
 
             if (responseContent == null)
-                return; //StatusCode(500, "bad read");
+                return ""; //StatusCode(500, "bad read");
 
-            token = responseContent!.token!;
+            return responseContent;
+        }
+
+        [HttpGet("getToken")]
+        public async Task<ActionResult<string>> GetTokenEndPoint()
+        {
+            var creds = new LoginToDto() { Username = login, Password = password };
+            /*
+            var creds = new Dictionary<string, string>
+            {
+                { "Username", login },
+                { "Password", password },
+            };
+            */
+            string json = JsonConvert.SerializeObject(creds);
+
+            var httpContent = new StringContent(json, Encoding.UTF8, "application/json");
+
+            var httpResponse = await _httpClient.PostAsync(forwordURL + "/api/auth/login", httpContent);
+
+            //var responseContent = await httpResponse.Content.ReadFromJsonAsync<LoginResponseFromDto>();
+
+            var responseContent = await httpResponse.Content.ReadAsStringAsync();
+
+            if (responseContent == null)
+                return NotFound(); //StatusCode(500, "bad read");
+
+            return StatusCode(200 , responseContent);
         }
         [HttpGet("getAllAvailable")]
         public async Task<ActionResult<IEnumerable<Car>>> GetAllAvailableCars()
@@ -99,71 +133,43 @@ namespace WebApplication1.Controllers
         }
 
         [HttpPost("getOffer")]
-        public async Task<ActionResult<Offer>> GetOffer([FromBody] OfferRequestFront data)
+        public async Task<ActionResult<RentalOfferDto>> GetOffer([FromBody] OfferRequestFront data)
         {
-            var offer = new Offer();
+            var RentalObj = new OfferRequestDto(data);
 
-            offer.id = Offer._id;
-            Offer._id++;
-
-            offer.carID = data.car!.id;
-            decimal dayRate = 10;
-            decimal insuranceRate = 1;
-
-            offer.dayRate = dayRate;
-            offer.insuranceRate = insuranceRate;
-            offer.validUntil = DateTime.Parse(data.enddate);
-
-
-            return offer;
-            /*
-            var RentalObj = new OfferRequestBack();
-
-            RentalObj.PlannedStartDate = data.PlannedStartDate;
-            RentalObj.PlannedEndDate = data.PlannedEndDate;
-            RentalObj.CarId = data.Car!.Id;
-
-            var tmp_content = JsonSerializer.Serialize<OfferRequestBack>(RentalObj);
+            //var tmp_content = JsonConvert.SerializeObject(RentalObj);
 
             var content = new StringContent(
-            Newtonsoft.Json.JsonConvert.SerializeObject(tmp_content),
+            JsonConvert.SerializeObject(RentalObj),
             Encoding.UTF8,
             "application/json");
 
-            var response = await _httpClient.PostAsync(forwordURL + "/api/user/cars" , content);
+            var response = await _httpClient.PostAsync(forwordURL + "/api/customer/rentals/offers" , content);
 
-            var responseContent = await response.Content.ReadAsStringAsync();
+            var responseContent = await response.Content.ReadFromJsonAsync<RentalOfferDto>();
 
             return StatusCode((int)response.StatusCode, responseContent);
-            */
         }
         
         [HttpPost("rent")]
-        public async Task<ActionResult<Offer>> GetRent([FromBody] RentalOfferFront data)
+        public async Task<ActionResult<RentalRequestDto>> GetRent([FromBody] RentalRequestFront data)
         {
-            
-            /*
-            var RentalObj = new RentalOfferBack();
 
-            RentalObj.ValidUntil = data.ValidUntil;
-            RentalObj.
 
-            var tmp_content = JsonSerializer.Serialize<RentalOfferBack>(RentalObj);
+            var RentalObj = new RentalRequestDto(data);
 
                 
             var content = new StringContent(
-            Newtonsoft.Json.JsonConvert.SerializeObject(tmp_content),
+            Newtonsoft.Json.JsonConvert.SerializeObject(RentalObj),
             Encoding.UTF8,
             "application/json");
                 
 
-            var response = await _httpClient.PostAsync(forwordURL + "/api/user/cars", content);
+            var response = await _httpClient.PostAsync(forwordURL + "/api/customer/rentals", content);
 
-            var responseContent = await response.Content.ReadAsStringAsync();
+            var responseContent = await response.Content.ReadFromJsonAsync<RentalRequestDto>();
 
             return StatusCode((int)response.StatusCode, responseContent);
-            */
-            return Ok("Car rented");
         }
         // GET: api/Users/5
         [HttpGet("{id}")]
