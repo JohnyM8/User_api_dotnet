@@ -46,7 +46,7 @@ namespace WebApplication1.Models
 
             
             
-            var jsonRequest = GetJsonString(code , redirectUri);
+            var jsonRequest = GetJsonString(decode_code , redirectUri);
 
             var response = await _httpClient.PostAsync(
                 "https://oauth2.googleapis.com/token",
