@@ -137,14 +137,21 @@ namespace WebApplication1.Controllers
         {
             var RentalObj = new OfferRequestDto(data);
 
+            var request = new HttpRequestMessage(HttpMethod.Post, forwordURL + "/api/customer/rentals/offers");
+
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+            request.Content = JsonContent.Create(RentalObj);
+
+            HttpResponseMessage response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
             //var tmp_content = JsonConvert.SerializeObject(RentalObj);
 
-            var content = new StringContent(
-            JsonConvert.SerializeObject(RentalObj),
-            Encoding.UTF8,
-            "application/json");
+            //var content = new StringContent(
+            //JsonConvert.SerializeObject(RentalObj),
+            //Encoding.UTF8,
+            //"application/json");
 
-            var response = await _httpClient.PostAsync(forwordURL + "/api/customer/rentals/offers" , content);
+            //var response = await _httpClient.PostAsync(forwordURL + "/api/customer/rentals/offers" , content);
 
             var responseContent = await response.Content.ReadFromJsonAsync<RentalOfferDto>();
 
@@ -158,19 +165,53 @@ namespace WebApplication1.Controllers
 
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
-            
+            var RentalObj = new RentalRequestDto(data);
+
+            request.Content = JsonContent.Create(RentalObj);
 
             HttpResponseMessage response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
 
 
-            var RentalObj = new RentalRequestDto(data);
+
+            //var RentalObj = new RentalRequestDto(data);
 
                 
-            var content = new StringContent(
-            Newtonsoft.Json.JsonConvert.SerializeObject(RentalObj),
-            Encoding.UTF8,
-            "application/json");
+            //var content = new StringContent(
+            //Newtonsoft.Json.JsonConvert.SerializeObject(RentalObj),
+            //Encoding.UTF8,
+            //"application/json");
                 
+
+            //var response = await _httpClient.PostAsync(forwordURL + "/api/customer/rentals", content);
+
+            var responseContent = await response.Content.ReadFromJsonAsync<RentalRequestDto>();
+
+            return StatusCode((int)response.StatusCode, responseContent);
+        }
+
+        [HttpPost("return")]
+        public async Task<ActionResult<RentalRequestDto>> ReturnCar([FromBody] ReturnRequestFront data)
+        {
+            var request = new HttpRequestMessage(HttpMethod.Post, forwordURL + "/api/customer/rentals");
+
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+            var RentalObj = new ReturnRequestDto(data);
+
+            request.Content = JsonContent.Create(RentalObj);
+
+            HttpResponseMessage response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
+
+
+
+            //var RentalObj = new RentalRequestDto(data);
+
+
+            //var content = new StringContent(
+            //Newtonsoft.Json.JsonConvert.SerializeObject(RentalObj),
+            //Encoding.UTF8,
+            //"application/json");
+
 
             //var response = await _httpClient.PostAsync(forwordURL + "/api/customer/rentals", content);
 
