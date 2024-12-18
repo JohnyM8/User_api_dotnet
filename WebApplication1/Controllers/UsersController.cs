@@ -118,6 +118,16 @@ namespace WebApplication1.Controllers
             return usertof;
         }
 
+        [HttpPost("google2")]
+        public async Task<ActionResult<string>> GoogleGetJson1([FromBody] GoogleAuthRequest request)
+        {
+            // Weryfikacja kodu Google
+            var googleTokens = _googleAuthService.GetJsonString(request.Code, request.RedirectUri);
+
+            return Ok(googleTokens);
+        }
+
+
         [HttpPost("google")]
         public async Task<ActionResult<AuthResponse>> GoogleAuth([FromBody] GoogleAuthRequest request)
         {

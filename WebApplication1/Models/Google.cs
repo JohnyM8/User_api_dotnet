@@ -23,10 +23,10 @@ namespace WebApplication1.Models
 
         public string GetJsonString(string code , string redirectUri)
         {
-            return "{" + $"\"code\" : \"{code}\" ," +
+            return "{" + $" \"code\" : \"{code}\" ," +
                 $"\"client_id\" : \"{_configuration["jsonCopy:GoogleAuth:ClientId"]!}\"," +
                 $"\"client_secret\" : \"{_configuration["jsonCopy:GoogleAuth:ClientSecret"]!}\"," +
-                $"\"redirect_uri: \"{redirectUri}\" ," +
+                $"\"redirect_uri\": \"{redirectUri}\" ," +
                 $"\"grant_type\": \"authorization_code\"" + "}";
         }
 
@@ -56,7 +56,7 @@ namespace WebApplication1.Models
             {
                 response.EnsureSuccessStatusCode();
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
 
                 throw new Exception(ex.Message);
