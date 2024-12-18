@@ -139,7 +139,7 @@ namespace WebApplication1.Controllers
             {
                 Token = token,
                 User = new UserDto(googleUserInfo),
-                IsNewUser = user == null
+                IsNewUser = user == null,
             });
         }
 

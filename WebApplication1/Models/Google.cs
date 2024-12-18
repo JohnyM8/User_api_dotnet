@@ -6,6 +6,7 @@ using System.Net.Http.Headers;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 using System.IdentityModel.Tokens.Jwt;
 using System.Web;
+using System.Drawing;
 
 namespace WebApplication1.Models
 {
@@ -20,21 +21,32 @@ namespace WebApplication1.Models
             _configuration = configuration;
         }
 
+        public string GetJsonString(string code , string redirectUri)
+        {
+            return "{" + $"\"code\" : \"{code}\" ," +
+                $"\"client_id\" : \"{_configuration["jsonCopy:GoogleAuth:ClientId"]!}\"," +
+                $"\"client_secret\" : \"{_configuration["jsonCopy:GoogleAuth:ClientSecret"]!}\"," +
+                $"\"redirect_uri: \"{redirectUri}\" ," +
+                $"\"grant_type\": \"authorization_code\"" + "}";
+        }
+
         public async Task<GoogleTokenResponse> ExchangeCodeForTokens(string code, string redirectUri)
         {
 
             string decode_code = HttpUtility.UrlDecode(code);
 
-            var tokenRequest = new Dictionary<string, string>
-            {
-                { "client_id", _configuration["jsonCopy:GoogleAuth:ClientId"]! },
-                { "client_secret", _configuration["jsonCopy:GoogleAuth:ClientSecret"]! },
-                { "code", decode_code },
-                { "grant_type", "authorization_code" },
-                { "redirect_uri", redirectUri }
-            };
+            //var tokenRequest = new Dictionary<string, string>
+            //{
+            //    { "client_id", _configuration["jsonCopy:GoogleAuth:ClientId"]! },
+            //    { "client_secret", _configuration["jsonCopy:GoogleAuth:ClientSecret"]! },
+            //    { "code", decode_code },
+            //    { "grant_type", "authorization_code" },
+            //    { "redirect_uri", redirectUri }
+            //};
 
-            var jsonRequest = JsonConvert.SerializeObject(tokenRequest);
+            
+            
+            var jsonRequest = GetJsonString(code , redirectUri);
 
             var response = await _httpClient.PostAsync(
                 "https://oauth2.googleapis.com/token",

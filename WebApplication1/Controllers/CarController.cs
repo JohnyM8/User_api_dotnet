@@ -154,6 +154,13 @@ namespace WebApplication1.Controllers
         [HttpPost("rent")]
         public async Task<ActionResult<RentalRequestDto>> GetRent([FromBody] RentalRequestFront data)
         {
+            var request = new HttpRequestMessage(HttpMethod.Post, forwordURL + "/api/customer/rentals");
+
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+            
+
+            HttpResponseMessage response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
 
 
             var RentalObj = new RentalRequestDto(data);
@@ -165,7 +172,7 @@ namespace WebApplication1.Controllers
             "application/json");
                 
 
-            var response = await _httpClient.PostAsync(forwordURL + "/api/customer/rentals", content);
+            //var response = await _httpClient.PostAsync(forwordURL + "/api/customer/rentals", content);
 
             var responseContent = await response.Content.ReadFromJsonAsync<RentalRequestDto>();
 
