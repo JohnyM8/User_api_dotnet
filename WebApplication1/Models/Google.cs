@@ -154,7 +154,7 @@ namespace WebApplication1.Models
 
         public UserDto(GoogleUserInfo data)
         {
-            //this.Id = data.Sub;
+            this.Id = data.Sub;
             this.Email = data.Email;
             this.Name = data.Name;
         }

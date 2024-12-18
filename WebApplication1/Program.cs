@@ -71,8 +71,8 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         });
 
 // Dodaj serwisy
-builder.Services.AddHttpClient<GoogleAuthService>();
-builder.Services.AddScoped<GoogleAuthService>();
+//builder.Services.AddHttpClient<GoogleAuthService>();
+//builder.Services.AddScoped<GoogleAuthService>();
 
 // Konfiguracja Identity
 //builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
