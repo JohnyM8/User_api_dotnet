@@ -62,7 +62,7 @@ namespace WebApplication1.Models
             startDate = data.startDate.ToShortDateString();
             endDate = data.endDate.ToShortDateString();
             totalPrice = data.totalPrice;
-            status = "occupied";
+            status = data.status.ToString();
             startLocation = data.startLocation;
             endLocation = data.endLocation;
         }

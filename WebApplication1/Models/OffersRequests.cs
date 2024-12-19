@@ -20,7 +20,7 @@
             //lastName = data.lastName;
             //birthday = DateOnly.Parse(data.birthday);
             //driverLicenseReceiveDate = DateOnly.Parse(data.driverLicenseReceiveDate);
-            //RentalName = data.RentalName;
+            //2RentalName = data.RentalName;
             PlannedStartDate = DateTime.Parse(data.PlannedStartDate);
             PlannedEndDate = DateTime.Parse(data.PlannedEndDate);
         }

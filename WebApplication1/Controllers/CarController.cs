@@ -15,6 +15,7 @@ using Azure;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Authorization;
 using System;
+using System.Composition;
 
 namespace WebApplication1.Controllers
 {
@@ -159,10 +160,13 @@ namespace WebApplication1.Controllers
 
             var User = _context.FindUserById(data.CustomerId);
 
+            if (User == null)
+                return NotFound("User not found");
+
             var Car = _context.FindCarById(data.CarId);
 
-            if(User == null || Car == null)
-                return NotFound("Car or User not found");
+            if(Car == null)
+                return NotFound("Car not found");
 
             var offer = new RentalOffer
             {
@@ -205,6 +209,9 @@ namespace WebApplication1.Controllers
 
             var offer = _context.Offers.Find(data.OfferId);
 
+            if(offer == null)
+                return NotFound("Offer not found");
+
             var new_data = new RentalRequestDto(data);
 
             var rental = new Rental
@@ -219,6 +226,9 @@ namespace WebApplication1.Controllers
             };
 
             var car = _context.Cars.Find(rental.carId);
+
+            if (car == null)
+                return NotFound("Car not found");
 
             car.IsAvailable = 0;
             _context.Rentals.Add(rental);
@@ -256,34 +266,54 @@ namespace WebApplication1.Controllers
         }
 
         [HttpPost("return")]
-        public async Task<ActionResult<RentalRequestDto>> ReturnCar([FromBody] ReturnRequestFront data)
+        public async Task<ActionResult<RentalToFront>> ReturnCar([FromBody] ReturnRequestFront data)
         {
-            var request = new HttpRequestMessage(HttpMethod.Post, forwordURL + "/api/customer/rentals");
+            var rental = _context.Rentals.Find(data.RentalId);
 
-            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            if (rental == null)
+                return NotFound("Rental offer not found");
 
-            var RentalObj = new ReturnRequestDto(data);
+            else if (rental.status == RentalStatus.pendingReturn)
+                return NotFound("Rental arleady peding return");
 
-            request.Content = JsonContent.Create(RentalObj);
+            else if (rental.status == RentalStatus.planned)
+                return NotFound("Rental yet to be planned");
 
-            HttpResponseMessage response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
+            else if (rental.status == RentalStatus.ended)
+                return NotFound("Rental arleady ended");
+
+            rental.status = RentalStatus.pendingReturn;
+
+            await _context.SaveChangesAsync();
+
+            return Ok(new RentalToFront(rental));
+
+            //var request = new HttpRequestMessage(HttpMethod.Post, forwordURL + "/api/customer/rentals");
+
+            //request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+            //var RentalObj = new ReturnRequestDto(data);
+
+            //request.Content = JsonContent.Create(RentalObj);
+
+            //HttpResponseMessage response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
 
 
 
-            //var RentalObj = new RentalRequestDto(data);
+            ////var RentalObj = new RentalRequestDto(data);
 
 
-            //var content = new StringContent(
-            //Newtonsoft.Json.JsonConvert.SerializeObject(RentalObj),
-            //Encoding.UTF8,
-            //"application/json");
+            ////var content = new StringContent(
+            ////Newtonsoft.Json.JsonConvert.SerializeObject(RentalObj),
+            ////Encoding.UTF8,
+            ////"application/json");
 
 
-            //var response = await _httpClient.PostAsync(forwordURL + "/api/customer/rentals", content);
+            ////var response = await _httpClient.PostAsync(forwordURL + "/api/customer/rentals", content);
 
-            var responseContent = await response.Content.ReadFromJsonAsync<RentalRequestDto>();
+            //var responseContent = await response.Content.ReadFromJsonAsync<RentalRequestDto>();
 
-            return StatusCode((int)response.StatusCode, responseContent);
+            //return StatusCode((int)response.StatusCode, responseContent);
         }
         // GET: api/Users/5
         [HttpGet("{id}")]
