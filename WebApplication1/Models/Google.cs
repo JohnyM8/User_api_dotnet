@@ -138,6 +138,26 @@ namespace WebApplication1.Models
         public string? RedirectUri { get; set; }
     }
 
+    public class GoogleAuthRegisterRequest
+    {
+        public string? Code { get; set; }
+        public string? RedirectUri { get; set; }
+
+        public string? firstname { get; set; }
+        public string? lastname { get; set; }
+        public string? login { get; set; }
+        public string? rentalService { get; set; }
+        public string? birthday { get; set; }
+        public string? driverLicenseReceiveDate { get; set; }
+    }
+
+    public class AuthRegisterResponse
+    {
+        public string? Token { get; set; }
+        public User User { get; set; }
+    }
+
+
     public class AuthResponse
     {
         public string? Token { get; set; }

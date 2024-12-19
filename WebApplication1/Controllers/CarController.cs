@@ -153,6 +153,7 @@ namespace WebApplication1.Controllers
             return StatusCode((int)response.StatusCode, responseContent);
         }
 
+        [Authorize]
         [HttpPost("getOffer")]
         public async Task<ActionResult<RentalOfferDto>> GetOffer([FromBody] OfferRequestFront data)
         {
@@ -181,6 +182,9 @@ namespace WebApplication1.Controllers
             _context.Offers.Add(offer);
             await _context.SaveChangesAsync();
 
+            if (EmailSender.SendOfferEmail(User.email))
+                return BadRequest("Email didnt sent");
+
             return Ok(offer);
             ////var request = new HttpRequestMessage(HttpMethod.Post, forwordURL + "/api/customer/rentals/offers");
 
@@ -202,7 +206,7 @@ namespace WebApplication1.Controllers
 
             ////return StatusCode((int)response.StatusCode, responseContent);
         }
-        
+        [Authorize]
         [HttpPost("rent")]
         public async Task<ActionResult<RentalToFront>> GetRent([FromBody] RentalRequestFront data)
         {
@@ -235,6 +239,10 @@ namespace WebApplication1.Controllers
             offer.isActive = false;
             await _context.SaveChangesAsync();
 
+
+
+            EmailSender.SendRentEmail(_context.GetUserEmailById(data.CustomerId));
+
             return Ok(new RentalToFront(rental));
 
             //var request = new HttpRequestMessage(HttpMethod.Post, forwordURL + "/api/customer/rentals");
@@ -264,7 +272,7 @@ namespace WebApplication1.Controllers
 
             //return StatusCode((int)response.StatusCode, responseContent);
         }
-
+        [Authorize]
         [HttpPost("return")]
         public async Task<ActionResult<RentalToFront>> ReturnCar([FromBody] ReturnRequestFront data)
         {
@@ -285,6 +293,8 @@ namespace WebApplication1.Controllers
             rental.status = RentalStatus.pendingReturn;
 
             await _context.SaveChangesAsync();
+
+            EmailSender.SendReturnStartEmail(_context.GetUserEmailById(rental.userId));
 
             return Ok(new RentalToFront(rental));
 

@@ -17,6 +17,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace WebApplication1.Controllers
 {
@@ -151,6 +152,46 @@ namespace WebApplication1.Controllers
                 User = new UserDtoGoogle(googleUserInfo),
                 IsNewUser = user == null,
             });
+        }
+
+        [HttpPost("google/signUp")]
+        public async Task<ActionResult<User>> GoogleAuthRegister([FromBody] GoogleAuthRegisterRequest request)
+        {
+            // Weryfikacja kodu Google
+            var googleTokens = await _googleAuthService.ExchangeCodeForTokens(request.Code!, request.RedirectUri!);
+
+            // Pobranie informacji o użytkowniku
+            //var googleUserInfo = await _googleAuthService.GetUserInfo(googleTokens.access_token!);
+
+            var googleUserInfo = _googleAuthService.GetUserInfoFromIdToken(googleTokens.id_token);
+
+            // Utworzenie/znalezienie użytkownika
+            //var user = _context.FindByEmail(googleUserInfo.Email!);
+
+            // Wygenerowanie tokenu JWT
+            var token = TokenManager.GenerateJwtToken(_configuration);
+
+            User newUser = new User()
+            {
+                login = request.login,
+                password = "",
+                email = googleUserInfo.Email,
+                firstname = request.firstname,
+                lastname = request.lastname,
+                rentalService = "0",
+                birthday = request.birthday,
+                driverLicenseReceiveDate = request.driverLicenseReceiveDate,
+            };
+
+            _context.Users.Add(newUser);
+            await _context.SaveChangesAsync();
+
+            return Ok(new AuthRegisterResponse()
+            {
+                Token = token,
+                User = newUser,
+            });
+
         }
 
 

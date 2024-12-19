@@ -15,6 +15,13 @@ namespace WebApplication1.Data
         {
         }
 
+        public string GetUserEmailById(int id)
+        {
+            var User = Users.Find(id);
+
+            return User.email;
+        }
+
         public User? FindUserById(int id)
         {
             var tmp = Users.Where(user => user.id == id).ToArray();
