@@ -17,6 +17,33 @@ namespace WebApplication1.Models
         public string? driverLicenseReceiveDate { get; set; }
     }
 
+    public class UserDto
+    {
+        [Key]
+        public int id { get; set; }
+        public string? firstname { get; set; }
+        public string? email { get; set; }
+        public string? lastname { get; set; }
+        public string? login { get; set; }
+        public string? password { get; set; }
+        public string? rentalService { get; set; }
+        public DateTime? birthday { get; set; }
+        public string? driverLicenseReceiveDate { get; set; }
+
+        public UserDto(User data)
+        {
+            id = data.id;
+            firstname = data.firstname;
+            email = data.email;
+            lastname = data.lastname;
+            login = data.login;
+            password = data.password;
+            rentalService = data.rentalService;
+            birthday = DateTime.Parse(data.birthday);
+            driverLicenseReceiveDate = data.driverLicenseReceiveDate;
+        }
+    }
+
     public class UserToFront
     {
         [Key]
@@ -41,7 +68,7 @@ namespace WebApplication1.Models
             this.login = user.login;
             this.password = user.password;
             this.rentalService = user.rentalService;
-            this.birthday = user.birthday;
+            //this.birthday = user.birthday;
             this.driverLicenseReceiveDate = user.driverLicenseReceiveDate;
         }
     }

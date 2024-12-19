@@ -16,11 +16,11 @@
         {
             CarId = data.CarId;
             CustomerId = data.CustomerId;
-            firstName = data.firstName;
-            lastName = data.lastName;
-            birthday = DateOnly.Parse(data.birthday);
-            driverLicenseReceiveDate = DateOnly.Parse(data.driverLicenseReceiveDate);
-            RentalName = data.RentalName;
+            //firstName = data.firstName;
+            //lastName = data.lastName;
+            //birthday = DateOnly.Parse(data.birthday);
+            //driverLicenseReceiveDate = DateOnly.Parse(data.driverLicenseReceiveDate);
+            //RentalName = data.RentalName;
             PlannedStartDate = DateTime.Parse(data.PlannedStartDate);
             PlannedEndDate = DateTime.Parse(data.PlannedEndDate);
         }
@@ -29,11 +29,11 @@
     {
         public int CarId { get; set; }
         public int CustomerId { get; set; }
-        public string firstName { get; set; }
-        public string lastName { get; set; }
-        public string birthday { get; set; }
-        public string driverLicenseReceiveDate { get; set; }
-        public string RentalName { get; set; }
+        //public string firstName { get; set; }
+        //public string lastName { get; set; }
+        //public string birthday { get; set; }
+        //public string driverLicenseReceiveDate { get; set; }
+        //public string RentalName { get; set; }
         public string PlannedStartDate { get; set; }
         public string PlannedEndDate { get; set; }
         

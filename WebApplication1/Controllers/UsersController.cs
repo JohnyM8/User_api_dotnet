@@ -148,7 +148,7 @@ namespace WebApplication1.Controllers
             return Ok(new AuthResponse
             {
                 Token = token,
-                User = new UserDto(googleUserInfo),
+                User = new UserDtoGoogle(googleUserInfo),
                 IsNewUser = user == null,
             });
         }

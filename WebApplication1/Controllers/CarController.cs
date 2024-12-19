@@ -13,6 +13,8 @@ using System.Net.Http.Headers;
 using Newtonsoft.Json;
 using Azure;
 using Microsoft.AspNetCore.Diagnostics;
+using Microsoft.AspNetCore.Authorization;
+using System;
 
 namespace WebApplication1.Controllers
 {
@@ -121,34 +123,17 @@ namespace WebApplication1.Controllers
             //return StatusCode((int)response.StatusCode, responseContent);
         }
 
+
         [HttpPost("getPage")]
         public async Task<ActionResult<IEnumerable<Car>>> GetPage([FromBody] PageRequest data)
         {
             return StatusCode(200, _context.GetPage(data.Page));
-            //var request = new HttpRequestMessage(HttpMethod.Get, forwordURL + "/api/user/cars");
-
-            //request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
-
-            //HttpResponseMessage response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
-
-            //var responseContent = await response.Content.ReadAsStringAsync();
-
-            //return StatusCode((int)response.StatusCode, responseContent);
         }
 
         [HttpGet("getCountPages")]
         public async Task<ActionResult<int>> GetCountPage()
         {
             return StatusCode(200, _context.GetNumPages());
-            //var request = new HttpRequestMessage(HttpMethod.Get, forwordURL + "/api/user/cars");
-
-            //request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
-
-            //HttpResponseMessage response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
-
-            //var responseContent = await response.Content.ReadAsStringAsync();
-
-            //return StatusCode((int)response.StatusCode, responseContent);
         }
 
         [HttpPost("getBathCars")]
@@ -172,56 +157,102 @@ namespace WebApplication1.Controllers
         {
             var RentalObj = new OfferRequestDto(data);
 
-            var request = new HttpRequestMessage(HttpMethod.Post, forwordURL + "/api/customer/rentals/offers");
+            var User = _context.FindUserById(data.CustomerId);
 
-            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            var Car = _context.FindCarById(data.CarId);
 
-            request.Content = JsonContent.Create(RentalObj);
+            if(User == null || Car == null)
+                return NotFound("Car or User not found");
 
-            HttpResponseMessage response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
-            //var tmp_content = JsonConvert.SerializeObject(RentalObj);
+            var offer = new RentalOffer
+            {
+                userId = User.id,
+                carId = data.CarId,
+                dailyRate = CarRentalCalculator.CalculateDailyCarRate(new CarDto(Car), new UserDto(User)),
+                insuranceRate = CarRentalCalculator.CalculateDailyInsuranceRate(new CarDto(Car), new UserDto(User)),
+                validUntil = DateTime.UtcNow.AddMinutes(10),
+                isActive = true
+            };
 
-            //var content = new StringContent(
-            //JsonConvert.SerializeObject(RentalObj),
-            //Encoding.UTF8,
-            //"application/json");
+            _context.Offers.Add(offer);
+            await _context.SaveChangesAsync();
 
-            //var response = await _httpClient.PostAsync(forwordURL + "/api/customer/rentals/offers" , content);
+            return Ok(offer);
+            ////var request = new HttpRequestMessage(HttpMethod.Post, forwordURL + "/api/customer/rentals/offers");
 
-            var responseContent = await response.Content.ReadFromJsonAsync<RentalOfferDto>();
+            ////request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
-            return StatusCode((int)response.StatusCode, responseContent);
+            ////request.Content = JsonContent.Create(RentalObj);
+
+            ////HttpResponseMessage response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
+            //////var tmp_content = JsonConvert.SerializeObject(RentalObj);
+
+            //////var content = new StringContent(
+            //////JsonConvert.SerializeObject(RentalObj),
+            //////Encoding.UTF8,
+            //////"application/json");
+
+            //////var response = await _httpClient.PostAsync(forwordURL + "/api/customer/rentals/offers" , content);
+
+            ////var responseContent = await response.Content.ReadFromJsonAsync<RentalOfferDto>();
+
+            ////return StatusCode((int)response.StatusCode, responseContent);
         }
         
         [HttpPost("rent")]
-        public async Task<ActionResult<RentalRequestDto>> GetRent([FromBody] RentalRequestFront data)
+        public async Task<ActionResult<RentalToFront>> GetRent([FromBody] RentalRequestFront data)
         {
-            var request = new HttpRequestMessage(HttpMethod.Post, forwordURL + "/api/customer/rentals");
 
-            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            var offer = _context.Offers.Find(data.OfferId);
 
-            var RentalObj = new RentalRequestDto(data);
+            var new_data = new RentalRequestDto(data);
 
-            request.Content = JsonContent.Create(RentalObj);
+            var rental = new Rental
+            {
+                carId = offer.carId,
+                userId = data.CustomerId,
+                startDate = new_data.PlannedStartDate,
+                endDate = new_data.PlannedEndDate,
+                totalPrice = (offer.dailyRate + offer.insuranceRate) *
+                         (new_data.PlannedEndDate - new_data.PlannedStartDate).Days,
+                status = new_data.PlannedStartDate > DateTime.UtcNow ? RentalStatus.planned : RentalStatus.inProgress
+            };
 
-            HttpResponseMessage response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
+            var car = _context.Cars.Find(rental.carId);
 
+            car.IsAvailable = 0;
+            _context.Rentals.Add(rental);
+            offer.isActive = false;
+            await _context.SaveChangesAsync();
 
+            return Ok(new RentalToFront(rental));
+
+            //var request = new HttpRequestMessage(HttpMethod.Post, forwordURL + "/api/customer/rentals");
+
+            //request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
             //var RentalObj = new RentalRequestDto(data);
 
-                
-            //var content = new StringContent(
-            //Newtonsoft.Json.JsonConvert.SerializeObject(RentalObj),
-            //Encoding.UTF8,
-            //"application/json");
-                
+            //request.Content = JsonContent.Create(RentalObj);
 
-            //var response = await _httpClient.PostAsync(forwordURL + "/api/customer/rentals", content);
+            //HttpResponseMessage response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
 
-            var responseContent = await response.Content.ReadFromJsonAsync<RentalRequestDto>();
 
-            return StatusCode((int)response.StatusCode, responseContent);
+
+            ////var RentalObj = new RentalRequestDto(data);
+
+
+            ////var content = new StringContent(
+            ////Newtonsoft.Json.JsonConvert.SerializeObject(RentalObj),
+            ////Encoding.UTF8,
+            ////"application/json");
+
+
+            ////var response = await _httpClient.PostAsync(forwordURL + "/api/customer/rentals", content);
+
+            //var responseContent = await response.Content.ReadFromJsonAsync<RentalRequestDto>();
+
+            //return StatusCode((int)response.StatusCode, responseContent);
         }
 
         [HttpPost("return")]

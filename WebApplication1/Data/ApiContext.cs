@@ -8,11 +8,31 @@ namespace WebApplication1.Data
     {
         public DbSet<User> Users { get; set; }
         public DbSet<Car> Cars { get; set; }
+        public DbSet<RentalOffer> Offers { get; set; }
+        public DbSet<Rental> Rentals { get; set; }
         public ApiContext(DbContextOptions<ApiContext> options)
             :base(options)
         {
         }
 
+        public User? FindUserById(int id)
+        {
+            var tmp = Users.Where(user => user.id == id).ToArray();
+
+            if (tmp.Count() == 0)
+                return null;
+
+            return tmp[0];
+        }
+        public Car? FindCarById(int id)
+        {
+            var tmp = Cars.Where(car => car.id == id).ToArray();
+
+            if (tmp.Count() == 0)
+                return null;
+
+            return tmp[0];
+        }
         public int GetNumPages()
         {
             var tmp = AllAvailable().ToArray();
