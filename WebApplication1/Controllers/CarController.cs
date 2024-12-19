@@ -325,6 +325,54 @@ namespace WebApplication1.Controllers
 
             //return StatusCode((int)response.StatusCode, responseContent);
         }
+
+        [HttpPost("rentedCars")]
+        public async Task<ActionResult<IEnumerable<Car>>> GetRentedCars([FromBody] RentedCarsRequest data)
+        {
+            var rentals = _context.GetUserRentals(data.UserId);
+
+            if (rentals.Count() == 0)
+                return NotFound("User has not rented any cars");
+
+            List<Car> CarList = new List<Car>();
+
+            foreach (var rental in rentals)
+            {
+                var car = _context.Cars.Find(rental.carId);
+
+                if(car != null && !CarList.Contains(car))
+                    CarList.Add(car);
+            }
+
+            return Ok(CarList);
+
+            //var request = new HttpRequestMessage(HttpMethod.Post, forwordURL + "/api/customer/rentals");
+
+            //request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+            //var RentalObj = new ReturnRequestDto(data);
+
+            //request.Content = JsonContent.Create(RentalObj);
+
+            //HttpResponseMessage response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
+
+
+
+            ////var RentalObj = new RentalRequestDto(data);
+
+
+            ////var content = new StringContent(
+            ////Newtonsoft.Json.JsonConvert.SerializeObject(RentalObj),
+            ////Encoding.UTF8,
+            ////"application/json");
+
+
+            ////var response = await _httpClient.PostAsync(forwordURL + "/api/customer/rentals", content);
+
+            //var responseContent = await response.Content.ReadFromJsonAsync<RentalRequestDto>();
+
+            //return StatusCode((int)response.StatusCode, responseContent);
+        }
         // GET: api/Users/5
         [HttpGet("{id}")]
         public async Task<ActionResult<Car>> GetCars(int id)

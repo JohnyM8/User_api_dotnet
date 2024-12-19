@@ -15,6 +15,15 @@ namespace WebApplication1.Data
         {
         }
 
+        public IEnumerable<Rental>? GetUserRentals(int UserId)
+        {
+            var tmp = Rentals.Where(rental => rental.userId == UserId);
+
+            if (tmp == null)
+                return null;
+
+            return tmp.ToArray();
+        }
         public string GetUserEmailById(int id)
         {
             var User = Users.Find(id);
@@ -91,7 +100,7 @@ namespace WebApplication1.Data
         {
             var tmp = Users.Where(user => user.login == login).ToArray();
 
-            if (tmp.Count() == 0)
+            if (tmp == null)
                 return null;
             else
                 return tmp[0];
@@ -101,7 +110,7 @@ namespace WebApplication1.Data
         {
             var tmp = Users.Where(user => user.email == email).ToArray();
 
-            if(tmp.Count() == 0)
+            if(tmp == null)
                 return null;
             else 
                 return tmp[0];
