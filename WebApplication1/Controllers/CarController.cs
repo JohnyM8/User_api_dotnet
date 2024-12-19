@@ -173,8 +173,8 @@ namespace WebApplication1.Controllers
             {
                 userId = User.id,
                 carId = data.CarId,
-                dailyRate = CarRentalCalculator.CalculateDailyCarRate(new CarDto(Car), new UserDto(User)),
-                insuranceRate = CarRentalCalculator.CalculateDailyInsuranceRate(new CarDto(Car), new UserDto(User)),
+                dailyRate = CarRentalCalculator.CalculateDailyCarRate(new CarDto(Car), new UserDtoToDataB(User)),
+                insuranceRate = CarRentalCalculator.CalculateDailyInsuranceRate(new CarDto(Car), new UserDtoToDataB(User)),
                 validUntil = DateTime.UtcNow.AddMinutes(10),
                 isActive = true
             };

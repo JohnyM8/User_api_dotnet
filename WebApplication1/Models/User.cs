@@ -17,7 +17,7 @@ namespace WebApplication1.Models
         public string? driverLicenseReceiveDate { get; set; }
     }
 
-    public class UserDto
+    public class UserDtoToDataB
     {
         [Key]
         public int id { get; set; }
@@ -30,7 +30,7 @@ namespace WebApplication1.Models
         public DateTime? birthday { get; set; }
         public string? driverLicenseReceiveDate { get; set; }
 
-        public UserDto(User data)
+        public UserDtoToDataB(User data)
         {
             id = data.id;
             firstname = data.firstname;

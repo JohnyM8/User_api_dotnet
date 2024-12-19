@@ -6,7 +6,7 @@
         public const double DefaultInsuranceRate = 15.0; // Base daily insurance rate in dollars
 
 
-        public static decimal CalculateDailyCarRate(CarDto car, UserDto customer)
+        public static decimal CalculateDailyCarRate(CarDto car, UserDtoToDataB customer)
         {
             // Later we could add calculating based on previous rentals (for example add score field for every customer)
             double carTypeMultiplier = car.type switch
@@ -42,7 +42,7 @@
             return (decimal)(DefaultBaseRate * carTypeMultiplier * ageMultiplier * driverAgeMultiplier);
         }
 
-        public static decimal CalculateDailyInsuranceRate(CarDto car, UserDto customer)
+        public static decimal CalculateDailyInsuranceRate(CarDto car, UserDtoToDataB customer)
         {
 
             // Later we could add calculating based on previous rentals (for example add score field for every customer)
