@@ -155,7 +155,7 @@ namespace WebApplication1.Controllers
         }
 
         [HttpPost("google/signUp")]
-        public async Task<ActionResult<User>> GoogleAuthRegister([FromBody] GoogleAuthRegisterRequest request)
+        public async Task<ActionResult<AuthRegisterResponse>> GoogleAuthRegister([FromBody] GoogleAuthRegisterRequest request)
         {
             // Weryfikacja kodu Google
             var googleTokens = await _googleAuthService.ExchangeCodeForTokens(request.Code!, request.RedirectUri!);

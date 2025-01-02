@@ -27,9 +27,10 @@ namespace WebApplication1.Models
         public string? login { get; set; }
         public string? password { get; set; }
         public string? rentalService { get; set; }
-        public DateTime? birthday { get; set; }
-        public string? driverLicenseReceiveDate { get; set; }
+        public DateOnly birthday { get; set; }
+        public DateOnly driverLicenseReceiveDate { get; set; }
 
+        public UserDto() { }
         public UserDto(User data)
         {
             id = data.id;
@@ -39,8 +40,8 @@ namespace WebApplication1.Models
             login = data.login;
             password = data.password;
             rentalService = data.rentalService;
-            birthday = DateTime.Parse(data.birthday);
-            driverLicenseReceiveDate = data.driverLicenseReceiveDate;
+            birthday = DateOnly.Parse(data.birthday);
+            driverLicenseReceiveDate = DateOnly.Parse(data.driverLicenseReceiveDate);
         }
     }
 
