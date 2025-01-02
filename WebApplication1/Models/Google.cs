@@ -161,18 +161,18 @@ namespace WebApplication1.Models
     public class AuthResponse
     {
         public string? Token { get; set; }
-        public UserDto User { get; set; }
+        public UserDtoGoogle User { get; set; }
         public bool IsNewUser { get; set; }
     }
 
-    public class UserDto
+    public class UserDtoGoogle
     {
         public string? Id { get; set; }
         public string? Email { get; set; }
         public string? Name { get; set; }
         public bool ProfileCompleted { get; set; }
 
-        public UserDto(GoogleUserInfo data)
+        public UserDtoGoogle(GoogleUserInfo data)
         {
             this.Id = data.Sub;
             this.Email = data.Email;
