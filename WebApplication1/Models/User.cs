@@ -17,7 +17,7 @@ namespace WebApplication1.Models
         public string? driverLicenseReceiveDate { get; set; }
     }
 
-    public class UserDto
+    public class UserDtoToDataB
     {
         [Key]
         public int id { get; set; }
