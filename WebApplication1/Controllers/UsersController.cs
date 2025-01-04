@@ -1,23 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Azure.Core;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using WebApplication1.Data;
 using WebApplication1.Models;
-using System.Text.Json;
 using MailKit.Net.Smtp;
-using MailKit;
 using MimeKit;
-using MailKit.Security;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.IdentityModel.Protocols.OpenIdConnect;
-using static System.Runtime.InteropServices.JavaScript.JSType;
+
 
 namespace WebApplication1.Controllers
 {
