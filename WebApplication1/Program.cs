@@ -14,34 +14,25 @@ using WebApplication1.Controllers;
 var builder = WebApplication.CreateBuilder(args);
 
 
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("AllowSpecificOrigin", policy =>
-    {
-        policy.WithOrigins("https://molczane.github.io")
-              .AllowAnyHeader()
-              .AllowAnyMethod();
-    });
-});
-
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("AllowSpecificOriginLocal", policy =>
-    {
-        policy.WithOrigins("http://localhost:8090")
-              .AllowAnyHeader()
-              .AllowAnyMethod();
-    });
-});
-
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy(name: "AllowAnyOrigins",
-        policy =>
-        {
-            policy.AllowAnyOrigin();
-        });
-});
+// builder.Services.AddCors(options =>
+// {
+//     options.AddPolicy("AllowSpecificOrigin", policy =>
+//     {
+//         policy.WithOrigins("https://molczane.github.io")
+//               .AllowAnyHeader()
+//               .AllowAnyMethod();
+//     });
+// });
+//
+// builder.Services.AddCors(options =>
+// {
+//     options.AddPolicy("AllowSpecificOriginLocal", policy =>
+//     {
+//         policy.WithOrigins("http://localhost:8090")
+//               .AllowAnyHeader()
+//               .AllowAnyMethod();
+//     });
+// });
 
 builder.Services.AddHttpClient();
 builder.Services.AddControllersWithViews();
@@ -68,11 +59,19 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             };
         });
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy(name: "AllowAnyOrigins",
+        policy =>
+        {
+            policy.AllowAnyOrigin();
+        });
+});
+
 var app = builder.Build();
 
-app.UseCors("AllowSpecificOrigin");
-app.UseCors("AllowSpecificOriginLocal");
-app.UseCors("AllowAnyOrigins");
+// app.UseCors("AllowSpecificOrigin");
+// app.UseCors("AllowSpecificOriginLocal");
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
@@ -81,6 +80,8 @@ if (!app.Environment.IsDevelopment())
     // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
+
+app.UseCors("AllowAnyOrigins");
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
