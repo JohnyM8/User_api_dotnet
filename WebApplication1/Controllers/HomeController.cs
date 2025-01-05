@@ -19,7 +19,6 @@ namespace WebApplication1.Controllers
         public IActionResult Index()
         {
             IEnumerable<User> users = _context.Users.ToList();
-            //IEnumerable<Car> cars = _context.Cars.ToList();
             return View(users);
         }
 

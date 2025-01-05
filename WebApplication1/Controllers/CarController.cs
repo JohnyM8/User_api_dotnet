@@ -59,10 +59,8 @@ namespace WebApplication1.Controllers
 
             var responseContent = await httpResponse.Content.ReadFromJsonAsync<LoginResponseFromDto>();
 
-            //var responseContent = await httpResponse.Content.ReadAsStringAsync();
-
             if (responseContent == null)
-                return ""; //StatusCode(500, "bad read");
+                return "";
 
             return responseContent.token!;
         }
@@ -105,25 +103,23 @@ namespace WebApplication1.Controllers
 
             var newResponse = responseContent.ConvertToCar();
 
-            //var responseContent = await response.Content.ReadAsStringAsync();
-
             return Ok(newResponse);
         }
 
-        [HttpGet("getAllCars")]
-        public async Task<ActionResult<IEnumerable<Car>>> GetAllCars()
-        {
-            return StatusCode(200, _context.All());
-            //var request = new HttpRequestMessage(HttpMethod.Get, forwordURL + "/api/user/cars");
+        //[HttpGet("getAllCars")]
+        //public async Task<ActionResult<IEnumerable<Car>>> GetAllCars()
+        //{
+        //    return StatusCode(200, _context.All());
+        //    //var request = new HttpRequestMessage(HttpMethod.Get, forwordURL + "/api/user/cars");
 
-            //request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+        //    //request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
-            //HttpResponseMessage response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
+        //    //HttpResponseMessage response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
 
-            //var responseContent = await response.Content.ReadAsStringAsync();
+        //    //var responseContent = await response.Content.ReadAsStringAsync();
 
-            //return StatusCode((int)response.StatusCode, responseContent);
-        }
+        //    //return StatusCode((int)response.StatusCode, responseContent);
+        //}
 
 
         [HttpPost("getPage")]
@@ -171,6 +167,7 @@ namespace WebApplication1.Controllers
             //var result = task;
             //int? code = ((IStatusCodeActionResult)task).StatusCode;
 
+
             HttpResponseMessage response = await GetAllAvCars();
 
             var responseContent = await response.Content.ReadFromJsonAsync<IEnumerable<CarDto>>();
@@ -209,6 +206,9 @@ namespace WebApplication1.Controllers
         [HttpPost("getOffer")]
         public async Task<ActionResult<RentalOfferFront>> GetOffer([FromBody] OfferRequestFront data)
         {
+            if (_context.FindUserById(data.CustomerId) == null)
+                return BadRequest("User with given ID does not exists");
+
             var RentalObj = new OfferRequestDto(data);
 
             var request = new HttpRequestMessage(HttpMethod.Post, forwordURL + "/api/customer/rentals/offers");
@@ -236,6 +236,9 @@ namespace WebApplication1.Controllers
         [HttpPost("rent")]
         public async Task<ActionResult<RentalToFront>> GetRent([FromBody] RentalRequestFront data)
         {
+            if (_context.FindUserById(data.CustomerId) == null)
+                return BadRequest("User with given ID does not exists");
+
             var request = new HttpRequestMessage(HttpMethod.Post, forwordURL + "/api/customer/rentals");
 
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
@@ -281,20 +284,34 @@ namespace WebApplication1.Controllers
         [HttpPost("rentedCars")]
         public async Task<ActionResult<IEnumerable<Car>>> GetRentedCars([FromBody] RentedCarsRequest data)
         {
-            var rentals = _context.GetUserRentals(data.UserId);
+            if (_context.FindUserById(data.UserId) == null)
+                return BadRequest("User with given ID does not exists");
 
-            if (rentals.Count() == 0)
-                return NotFound("User has not rented any cars");
+            var request = new HttpRequestMessage(HttpMethod.Get, forwordURL + "/api/customer/rentals/my");
 
-            List<Car> CarList = new List<Car>();
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
-            foreach (var rental in rentals)
-            {
-                var car = _context.Cars.Find(rental.carId);
+            var RequestObj = new RentedCarsRequestDto(data);
 
-                if(car != null && !CarList.Contains(car))
-                    CarList.Add(car);
-            }
+            request.Content = JsonContent.Create(RequestObj);
+
+            HttpResponseMessage response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
+
+            if ((int)response.StatusCode != 200)
+                return StatusCode((int)response.StatusCode, null);
+
+            var responseContent = await response.Content.ReadFromJsonAsync<IEnumerable<CarDto>>();
+
+            if (responseContent == null)
+                return NotFound();
+
+            if (responseContent.Count() == 0)
+                return NotFound("User has not rented any cars yet");
+
+            var CarList = responseContent.ConvertToCar();
+
+            if (CarList == null)
+                return NotFound("List not found");
 
             return Ok(CarList);
         }
@@ -325,6 +342,184 @@ namespace WebApplication1.Controllers
 
             return StatusCode((int)response.StatusCode, newCar);
         }
+
+
+        [HttpGet("distinctBrands")]
+        public async Task<ActionResult<IEnumerable<string>>> GetDistinctBrands()
+        {
+            HttpResponseMessage response = await GetAllAvCars();
+
+            if ((int)response.StatusCode != 200)
+                return StatusCode((int)response.StatusCode, null);
+
+            var responseContent = await response.Content.ReadFromJsonAsync<IEnumerable<CarDto>>();
+
+            if (responseContent == null)
+                return NotFound();
+
+            var AllCars = responseContent.ConvertToCar();
+
+
+            var brands = AllCars
+                .AsQueryable()
+                .Select(car => car.producer)
+                .Distinct()
+                .ToList();
+            return Ok(brands); // Returns a plain JSON array
+        }
+
+        [HttpGet("modelsByBrand/{producer}")]
+        public async Task<ActionResult<IEnumerable<string>>> GetModelsByBrand(string producer)
+        {
+            HttpResponseMessage response = await GetAllAvCars();
+
+            if ((int)response.StatusCode != 200)
+                return StatusCode((int)response.StatusCode, null);
+
+            var responseContent = await response.Content.ReadFromJsonAsync<IEnumerable<CarDto>>();
+
+            if (responseContent == null)
+                return NotFound();
+
+            var AllCars = responseContent.ConvertToCar();
+
+            var models = AllCars
+                .Where(car => car.producer == producer)
+                .Select(car => car.model)
+                .Distinct()
+                .ToList();
+            return Ok(models); // Returns a plain JSON array
+        }
+
+        [HttpGet("distinctYears")]
+        public async Task<ActionResult<IEnumerable<string>>> GetDistinctYears()
+        {
+            HttpResponseMessage response = await GetAllAvCars();
+
+            if ((int)response.StatusCode != 200)
+                return StatusCode((int)response.StatusCode, null);
+
+            var responseContent = await response.Content.ReadFromJsonAsync<IEnumerable<CarDto>>();
+
+            if (responseContent == null)
+                return NotFound();
+
+            var AllCars = responseContent.ConvertToCar();
+
+            var years = AllCars
+                .Select(car => car.yearOfProduction)
+                .Distinct()
+                .OrderBy(year => year)
+                .ToList();
+            return Ok(years); // Returns a plain JSON array
+        }
+
+        [HttpGet("distinctTypes")]
+        public async Task<ActionResult<IEnumerable<string>>> GetDistinctTypes()
+        {
+            HttpResponseMessage response = await GetAllAvCars();
+
+            if ((int)response.StatusCode != 200)
+                return StatusCode((int)response.StatusCode, null);
+
+            var responseContent = await response.Content.ReadFromJsonAsync<IEnumerable<CarDto>>();
+
+            if (responseContent == null)
+                return NotFound();
+
+            var AllCars = responseContent.ConvertToCar();
+
+            var types = AllCars
+                .Select(car => car.type)
+                .Distinct()
+                .ToList();
+            return Ok(types); // Returns a plain JSON array
+        }
+
+        [HttpGet("distinctLocations")]
+        public async Task<ActionResult<IEnumerable<string>>> GetDistinctLocations()
+        {
+            HttpResponseMessage response = await GetAllAvCars();
+
+            if ((int)response.StatusCode != 200)
+                return StatusCode((int)response.StatusCode, null);
+
+            var responseContent = await response.Content.ReadFromJsonAsync<IEnumerable<CarDto>>();
+
+            if (responseContent == null)
+                return NotFound();
+
+            var AllCars = responseContent.ConvertToCar();
+
+            var locations = AllCars
+                .Select(car => car.location)
+                .Distinct()
+                .ToList();
+            return Ok(locations); // Returns a plain JSON array
+        }
+
+        /* FILTERING CARS */
+        [HttpGet("filteredCars")]
+        public async Task<ActionResult<IEnumerable<Car>>> GetFilteredCars(
+            [FromQuery] string? producer,
+            [FromQuery] string? model,
+            [FromQuery] int? yearOfProduction,
+            [FromQuery] string? type,
+            [FromQuery] string? location)
+        {
+            try
+            {
+                HttpResponseMessage response = await GetAllAvCars();
+
+                if ((int)response.StatusCode != 200)
+                    return StatusCode((int)response.StatusCode, null);
+
+                var responseContent = await response.Content.ReadFromJsonAsync<IEnumerable<CarDto>>();
+
+                if (responseContent == null)
+                    return NotFound();
+
+                var AllCars = responseContent.ConvertToCar();
+
+                var filteredCars = AllCars.AsQueryable();
+
+                if (!string.IsNullOrEmpty(producer))
+                {
+                    filteredCars = filteredCars.Where(car => car.producer == producer);
+                }
+
+                if (!string.IsNullOrEmpty(model))
+                {
+                    filteredCars = filteredCars.Where(car => car.model == model);
+                }
+
+                if (yearOfProduction.HasValue)
+                {
+                    // Convert yearOfProduction to a string and compare
+                    int year = yearOfProduction.Value;
+                    filteredCars = filteredCars.Where(car => car.yearOfProduction == year.ToString());
+                }
+
+                if (!string.IsNullOrEmpty(type))
+                {
+                    filteredCars = filteredCars.Where(car => car.type == type);
+                }
+
+                if (!string.IsNullOrEmpty(location))
+                {
+                    filteredCars = filteredCars.Where(car => car.location == location);
+                }
+
+                var result = filteredCars.ToList();
+
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"An error occurred: {ex.Message}");
+            }
+        }
+
         /*
         // PUT: api/Users/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
