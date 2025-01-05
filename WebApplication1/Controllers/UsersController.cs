@@ -129,8 +129,10 @@ namespace WebApplication1.Controllers
             var googleUserInfo = _googleAuthService.GetUserInfoFromIdToken(googleTokens.id_token);
 
             // Utworzenie/znalezienie użytkownika
-            var user = _context.FindByEmail(googleUserInfo.Email!);
+            // var user = _context.FindByEmail(googleUserInfo.Email!);
 
+            String? user = null;
+            
             // Wygenerowanie tokenu JWT
             var token = TokenManager.GenerateJwtToken(_configuration);
 

@@ -379,6 +379,56 @@ public class CarController : ControllerBase
         return Ok(locations); // Returns a plain JSON array
     }
     
+    /* FILTERING CARS */
+    [HttpGet("filteredCars")]
+    public ActionResult<IEnumerable<Car>> GetFilteredCars(
+        [FromQuery] string? producer,
+        [FromQuery] string? model,
+        [FromQuery] int? yearOfProduction,
+        [FromQuery] string? type,
+        [FromQuery] string? location)
+    {
+        try
+        {
+            var filteredCars = _context.Cars.AsQueryable();
+
+            if (!string.IsNullOrEmpty(producer))
+            {
+                filteredCars = filteredCars.Where(car => car.producer == producer);
+            }
+
+            if (!string.IsNullOrEmpty(model))
+            {
+                filteredCars = filteredCars.Where(car => car.model == model);
+            }
+
+            if (yearOfProduction.HasValue)
+            {
+                // Convert yearOfProduction to a string and compare
+                int year = yearOfProduction.Value;
+                filteredCars = filteredCars.Where(car => car.yearOfProduction == year.ToString());
+            }
+
+            if (!string.IsNullOrEmpty(type))
+            {
+                filteredCars = filteredCars.Where(car => car.type == type);
+            }
+
+            if (!string.IsNullOrEmpty(location))
+            {
+                filteredCars = filteredCars.Where(car => car.location == location);
+            }
+
+            var result = filteredCars.ToList();
+
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, $"An error occurred: {ex.Message}");
+        }
+    }
+
     /*
         // PUT: api/Users/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
