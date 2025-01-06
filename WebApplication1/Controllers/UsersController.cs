@@ -66,6 +66,12 @@ namespace WebApplication1.Controllers
         [HttpPost("google/moreData")]
         public async Task<ActionResult<AuthRegisterResponse>> GoogleAuthMoreData([FromBody] GoogleAuthRegisterRequest request)
         {
+            if (_context.FindByLogin(request.login) != null)
+                return BadRequest("User with that login arleady exists");
+
+            if (_context.FindByEmail(request.Email) != null)
+                return BadRequest("User with that email arleady exists");
+
             User newUser = new User()
             {
                 login = request.login,
@@ -73,7 +79,7 @@ namespace WebApplication1.Controllers
                 email = request.Email,
                 firstname = request.firstname,
                 lastname = request.lastname,
-                rentalService = "0",
+                rentalService = Constants.RentalName,
                 birthday = request.birthday,
                 driverLicenseReceiveDate = request.driverLicenseReceiveDate,
             };
@@ -87,6 +93,8 @@ namespace WebApplication1.Controllers
                 IsProfileComplete = true
             });
         }
+
+
 
 
         //GARBAGE ONLY BELOW//
