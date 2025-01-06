@@ -1,4 +1,6 @@
-﻿namespace WebApplication1.Models
+﻿using System.Reflection.Metadata;
+
+namespace WebApplication1.Models
 {
     public class RentalRequestDto
     {
@@ -13,7 +15,7 @@
         {
             OfferId = data.OfferId;
             CustomerId = data.CustomerId;
-            RentalName = data.RentalName;
+            RentalName = Constants.RentalName;
             PlannedStartDate = DateTime.Parse(data.PlannedStartDate);
             PlannedEndDate = DateTime.Parse(data.PlannedEndDate);
         }
@@ -23,7 +25,7 @@
         public int OfferId { get; set; } // Moje id
         public int CustomerId { get; set; } // External id
 
-        public string RentalName { get; set; }
+        //public string RentalName { get; set; }
         public string PlannedStartDate { get; set; }
         public string PlannedEndDate { get; set; }
     }

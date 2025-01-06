@@ -175,7 +175,7 @@ namespace WebApplication1.Controllers
 
             var responseContent = await response.Content.ReadFromJsonAsync<RentalOfferDto>();
 
-            if (EmailSender.SendOfferEmail(_context.GetUserEmailById(data.CustomerId) , responseContent))
+            if (EmailSender.SendOfferEmail(_context.GetUserEmailById(data.CustomerId) , responseContent , RentalObj))
                 return BadRequest("Email wasnt send");
 
             var newOffer = new RentalOfferFront(responseContent);
@@ -185,7 +185,41 @@ namespace WebApplication1.Controllers
             return StatusCode((int)response.StatusCode, newOffer);
         }
 
-        [Authorize]
+        [HttpGet("rentlink/{Offerid}/{Userid}/{PlannedStartDate}/{PlannedEndDate}")]
+        public async Task<ActionResult<RentalRequestDto>> GetRent(int Offerid , int Userid , string PlannedStartDate , string PlannedEndDate)
+        {
+            RentalRequestFront data = new RentalRequestFront() 
+            {
+                OfferId = Offerid,
+                CustomerId = Userid,
+                PlannedStartDate = PlannedStartDate,
+                PlannedEndDate = PlannedEndDate
+            };
+
+            
+
+            var request = new HttpRequestMessage(HttpMethod.Post, forwordURL + "/api/customer/rentals");
+
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+            var RentalObj = new RentalRequestDto(data);
+
+            //return Ok(RentalObj);
+
+            request.Content = JsonContent.Create(RentalObj);
+
+            HttpResponseMessage response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
+
+            if ((int)response.StatusCode != 200)
+                return StatusCode((int)response.StatusCode, "Internal error");
+
+            if (EmailSender.SendRentEmail(_context.GetUserEmailById(data.CustomerId)))
+                return BadRequest("Email didnt sent");
+
+            return StatusCode((int)response.StatusCode, "Rental succesful!\n");
+        }
+
+        //[Authorize]
         [HttpPost("rent")]
         public async Task<ActionResult<RentalToFront>> GetRent([FromBody] RentalRequestFront data)
         {
@@ -203,7 +237,7 @@ namespace WebApplication1.Controllers
             HttpResponseMessage response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
 
             if((int)response.StatusCode != 200)
-                return StatusCode((int)response.StatusCode, null);
+                return StatusCode((int)response.StatusCode, response.Content.ReadFromJsonAsync<string>());
 
             if(EmailSender.SendRentEmail(_context.GetUserEmailById(data.CustomerId)))
                 return BadRequest("Email didnt sent");
@@ -212,6 +246,7 @@ namespace WebApplication1.Controllers
 
             return StatusCode((int)response.StatusCode, new RentalToFront(responseContent));
         }
+
         [Authorize]
         [HttpPost("return")]
         public async Task<ActionResult<ReturnRecordDto>> ReturnCar([FromBody] ReturnRequestFront data)

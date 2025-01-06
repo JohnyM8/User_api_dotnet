@@ -6,6 +6,7 @@ using iText.Layout;
 using iText.Layout.Element;
 using iText.Layout.Properties;
 using iText.Kernel.Geom;
+using iText.Kernel.Pdf.Action;
 
 
 namespace WebApplication1.Models
@@ -13,7 +14,7 @@ namespace WebApplication1.Models
     public static class FileCreator
     {
         
-        public static (string , string) CreateRentalOfferFile(RentalOfferDto rental)
+        public static (string , string) CreateRentalOfferFile(RentalOfferDto rental , OfferRequestDto offer)
         {
             string DirectoryName = "TestFile";
             string filename = $"Offer{DateTime.Now.Day}_{DateTime.Now.Month}" +
@@ -23,6 +24,11 @@ namespace WebApplication1.Models
 
             bool exists = System.IO.Directory.Exists(DirectoryName);
 
+            string websiteUrl = $"https://user-api-dotnet.azurewebsites.net/api/cars/rentlink/{rental.Id}/{offer.CustomerId}/" +
+                $"{offer.PlannedStartDate.Year}.{offer.PlannedStartDate.Month}.{offer.PlannedStartDate.Day}/" +
+                $"{offer.PlannedEndDate.Year}.{offer.PlannedEndDate.Month}.{offer.PlannedEndDate.Day}";
+
+            // websiteUrl = $"https://user-api-dotnet.azurewebsites.net/api/cars/rentlink/1/1/2025.2.2/2025.3.3";
             if (!exists)
                 System.IO.Directory.CreateDirectory(DirectoryName);
 
@@ -86,12 +92,23 @@ namespace WebApplication1.Models
                     document.Add(new Paragraph($"Location: {location}"));
                     document.Add(new Paragraph($"Available: {(isAvailable ? "Yes" : "No")}"));
 
+                    document.Add(new Paragraph($"\nRental Planned Start Date: {offer.PlannedStartDate:dd-MM-yyyy}"));
+                    document.Add(new Paragraph($"Rental Planned End Date: {offer.PlannedEndDate:dd-MM-yyyy}"));
+
+
                     // Dodanie podsumowania
                     document.Add(new Paragraph("\n--- Summary ---")
                         );
-                    document.Add(new Paragraph($"Total Price for 1 day (incl. insurance): ${(dailyRate + insuranceRate):F2}")
+                    document.Add(new Paragraph($"Total Price for 1 day (incl. insurance): ${(dailyRate + insuranceRate):F2}\n")
                         .SetMarginBottom(20));
 
+                    document.Add(new Paragraph("\nWould you like you like to rent the car?\n"));
+
+                    Link link = new Link("Click here if you accept!", PdfAction.CreateURI(websiteUrl));
+                    Paragraph linkParagraph = new Paragraph(link)
+                        .SetFontColor(iText.Kernel.Colors.ColorConstants.BLUE)
+                        .SetUnderline();
+                    document.Add(linkParagraph);
                     // Zamknięcie dokumentu
                     document.Close();
                 }

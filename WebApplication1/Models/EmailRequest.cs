@@ -50,7 +50,52 @@ namespace WebApplication1.Models
             };
             return SendEmail(emailR);
         }
-        public static bool SendOfferEmail(string email , RentalOfferDto rental)
+        //public static bool SendOfferEmail2(string email, RentalOfferDto rental)
+        //{
+        //    var emailR = new EmailRequest()
+        //    {
+        //        To = email,
+        //        Subject = "New Offer",
+        //    };
+
+        //    (string path, string filename) = FileCreator.CreateRentalOfferFile(rental);
+
+        //    var body = new TextPart("plain")
+        //    {
+        //        Text = "Heres your's offer details.\n"
+        //    };
+
+        //    var stream = File.OpenRead(path);
+        //    var attachment = new MimePart("document", "pdf")
+        //    {
+        //        Content = new MimeContent(stream),
+        //        ContentDisposition = new ContentDisposition(ContentDisposition.Attachment),
+        //        ContentTransferEncoding = ContentEncoding.Base64,
+        //        FileName = Path.GetFileName(filename)
+        //    };
+
+
+
+        //    var multipart = new Multipart("mixed");
+
+        //    multipart.Add(body);
+        //    multipart.Add(attachment);
+
+
+        //    emailR.Body = multipart;
+
+        //    //stream.Close();
+        //    //File.Delete(path);
+
+        //    bool response = SendEmail(emailR, path);
+
+        //    stream.Close();
+        //    File.Delete(path);
+
+        //    return response;
+        //}
+
+        public static bool SendOfferEmail(string email , RentalOfferDto rental , OfferRequestDto offer)
         {
             var emailR = new EmailRequest()
             {
@@ -58,11 +103,11 @@ namespace WebApplication1.Models
                 Subject = "New Offer",
             };
 
-            (string path , string filename) = FileCreator.CreateRentalOfferFile(rental);
+            (string path , string filename) = FileCreator.CreateRentalOfferFile(rental , offer);
 
             var body = new TextPart("plain")
             {
-                Text = "Heres your's offer details.\n"
+                Text = "Your's offer details are in the attachment below.\n"
             };
 
             var stream = File.OpenRead(path);

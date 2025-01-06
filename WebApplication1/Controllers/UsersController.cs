@@ -356,7 +356,25 @@ namespace WebApplication1.Controllers
             //    return StatusCode(500, $"Internal server error: {ex.Message}");
             //}
 
-            if (!EmailSender.SendOfferEmail(emailRequest.To , null))
+            RentalOfferDto rental = new RentalOfferDto()
+            {
+                Id = 1,
+                DailyRate = 10,
+                InsuranceRate = 10,
+                TotalCost = 10,
+                ValidUntil = DateTime.UtcNow,
+            };
+
+            var offer = new OfferRequestDto() 
+            { 
+                CarId = 1,
+                CustomerId = 1,
+                PlannedEndDate = DateTime.Parse("2025.12.20"),
+                PlannedStartDate = DateTime.Parse("2025.10.12")
+
+            };
+
+            if (!EmailSender.SendOfferEmail(emailRequest.To , rental , offer))
                 return BadRequest("Email wasnt send");
 
             return Ok();
