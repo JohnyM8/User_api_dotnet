@@ -14,25 +14,25 @@ using WebApplication1.Controllers;
 var builder = WebApplication.CreateBuilder(args);
 
 
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("AllowSpecificOrigin", policy =>
-    {
-        policy.WithOrigins("https://molczane.github.io")
-              .AllowAnyHeader()
-              .AllowAnyMethod();
-    });
-});
+//builder.Services.AddCors(options =>
+//{
+//    options.AddPolicy("AllowSpecificOrigin", policy =>
+//    {
+//        policy.WithOrigins("https://molczane.github.io")
+//              .AllowAnyHeader()
+//              .AllowAnyMethod();
+//    });
+//});
 
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("AllowSpecificOriginLocal", policy =>
-    {
-        policy.WithOrigins("http://localhost:8090")
-              .AllowAnyHeader()
-              .AllowAnyMethod();
-    });
-});
+//builder.Services.AddCors(options =>
+//{
+//    options.AddPolicy("AllowSpecificOriginLocal", policy =>
+//    {
+//        policy.WithOrigins("http://localhost:8090")
+//              .AllowAnyHeader()
+//              .AllowAnyMethod();
+//    });
+//});
 
 builder.Services.AddCors(options =>
 {
@@ -70,8 +70,8 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 var app = builder.Build();
 
-app.UseCors("AllowSpecificOrigin");
-app.UseCors("AllowSpecificOriginLocal");
+//app.UseCors("AllowSpecificOrigin");
+//app.UseCors("AllowSpecificOriginLocal");
 app.UseCors("AllowAnyOrigins");
 
 // Configure the HTTP request pipeline.

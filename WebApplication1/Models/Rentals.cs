@@ -46,7 +46,7 @@ namespace WebApplication1.Models
     public class RentalToFront
     {
         public int id { get; set; }
-        public int carId { get; set; } 
+        public Car Car { get; set; } 
         public int userId { get; set; }
         public string startDate { get; set; } 
         public string endDate { get; set; } 
@@ -57,7 +57,7 @@ namespace WebApplication1.Models
         public RentalToFront(RentalDto data)
         {
             id = data.Id;
-            carId = data.CarId;
+            //carId = data.CarId;
             userId = data.UserId;
             startDate = data.StartDate.ToShortDateString();
             endDate = data.EndDate.ToShortDateString();

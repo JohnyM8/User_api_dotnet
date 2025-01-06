@@ -221,10 +221,11 @@ namespace WebApplication1.Controllers
 
             if ((int)response.StatusCode != 200)
                 return StatusCode((int)response.StatusCode, null);
-            //if (EmailSender.SendOfferEmail(user.email))
+
+            //if (EmailSender.SendOfferEmail(data.email))
             //    return BadRequest("Email didnt sent");
 
-                var responseContent = await response.Content.ReadFromJsonAsync<RentalOfferDto>();
+            var responseContent = await response.Content.ReadFromJsonAsync<RentalOfferDto>();
 
             var newOffer = new RentalOfferFront(responseContent);
 
@@ -300,7 +301,7 @@ namespace WebApplication1.Controllers
             if ((int)response.StatusCode != 200)
                 return StatusCode((int)response.StatusCode, null);
 
-            var responseContent = await response.Content.ReadFromJsonAsync<IEnumerable<CarDto>>();
+            var responseContent = await response.Content.ReadFromJsonAsync<IEnumerable<RentalDto>>();
 
             if (responseContent == null)
                 return NotFound();
@@ -308,13 +309,47 @@ namespace WebApplication1.Controllers
             if (responseContent.Count() == 0)
                 return NotFound("User has not rented any cars yet");
 
-            var CarList = responseContent.ConvertToCar();
+            var RentalsList = new List<RentalToFront>();
 
-            if (CarList == null)
-                return NotFound("List not found");
+            foreach (var item in responseContent)
+            {
+                var Car = await GetCar(item.CarId);
 
-            return Ok(CarList);
+                if (Car == null)
+                    return NotFound("Techical problems: Car with that id was not found");
+
+                var tmp = new RentalToFront(item);
+
+                tmp.Car = Car;
+
+                RentalsList.Add(tmp);
+            }
+
+            return Ok(RentalsList);
         }
+
+        public async Task<Car> GetCar(int Id)
+        {
+            var request = new HttpRequestMessage(HttpMethod.Get, forwordURL + $"/api/customer/cars/{Id}");
+
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+            HttpResponseMessage response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
+
+            //var responseContent = await response.Content.ReadFromJsonAsync<CarDto>();
+
+            var responseContent = await response.Content.ReadAsStringAsync();
+
+            if (responseContent == null)
+                return null;
+
+            var DtoCar = JsonConvert.DeserializeObject<CarDto>(responseContent);
+
+            var newCar = new Car(DtoCar);
+
+            return newCar;
+        }
+
         // GET: api/Users/5
         [HttpGet("{id}")]
         public async Task<ActionResult<Car>> GetCars(int id)
@@ -358,7 +393,6 @@ namespace WebApplication1.Controllers
                 return NotFound();
 
             var AllCars = responseContent.ConvertToCar();
-
 
             var brands = AllCars
                 .AsQueryable()
