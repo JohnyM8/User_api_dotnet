@@ -36,15 +36,129 @@ namespace WebApplication1.Controllers
             _googleAuthService = new GoogleAuthService(httpClient , configuration);
         }
         
-        
-        ///
-        // GET: api/Users
+
+        [HttpPost("google")]
+        public async Task<ActionResult<AuthResponse>> GoogleAuth([FromBody] GoogleAuthRequest request)
+        {
+            // Weryfikacja kodu Google
+            var googleTokens = await _googleAuthService.ExchangeCodeForTokens(request.Code!, request.RedirectUri!);
+
+            // Pobranie informacji o użytkowniku
+            //var googleUserInfo = await _googleAuthService.GetUserInfo(googleTokens.access_token!);
+
+            var googleUserInfo = _googleAuthService.GetUserInfoFromIdToken(googleTokens.id_token);
+
+            // Utworzenie/znalezienie użytkownika
+            var user = _context.FindByEmail(googleUserInfo.Email!);
+
+            // Wygenerowanie tokenu JWT
+            var token = TokenManager.GenerateJwtToken(_configuration);
+
+            return Ok(new AuthResponse
+            {
+                Token = token,
+                User = new UserDtoGoogle(googleUserInfo),
+                IsNewUser = user == null,
+            });
+        }
+
+        [Authorize]
+        [HttpPost("google/moreData")]
+        public async Task<ActionResult<AuthRegisterResponse>> GoogleAuthMoreData([FromBody] GoogleAuthRegisterRequest request)
+        {
+            User newUser = new User()
+            {
+                login = request.login,
+                password = "",
+                email = request.Email,
+                firstname = request.firstname,
+                lastname = request.lastname,
+                rentalService = "0",
+                birthday = request.birthday,
+                driverLicenseReceiveDate = request.driverLicenseReceiveDate,
+            };
+
+            _context.Users.Add(newUser);
+            await _context.SaveChangesAsync();
+
+            return Ok(new AuthRegisterResponse()
+            {
+                User = newUser,
+                IsProfileComplete = true
+            });
+        }
+
+
+        //GARBAGE ONLY BELOW//
+
+
+
+
+
+        [HttpPost("google2")]
+        public async Task<ActionResult<string>> GoogleGetJson1([FromBody] GoogleAuthRequest request)
+        {
+            // Weryfikacja kodu Google
+            var googleTokens = _googleAuthService.GetJsonString(request.Code, request.RedirectUri);
+
+            return Ok(googleTokens);
+        }
+
+        [HttpGet("google3")]
+        public async Task<ActionResult<string>> GoogleGetJson2()
+        {
+            // Weryfikacja kodu Google
+            var googleTokens = TokenManager.GenerateJwtToken(_configuration);
+
+            return Ok(googleTokens);
+        }
+
+        [HttpPost("google/signUp")]
+        public async Task<ActionResult<AuthRegisterResponse>> GoogleAuthRegister([FromBody] GoogleAuthRegisterRequest request)
+        {
+            // Weryfikacja kodu Google
+            var googleTokens = await _googleAuthService.ExchangeCodeForTokens(request.Code!, request.RedirectUri!);
+
+            // Pobranie informacji o użytkowniku
+            //var googleUserInfo = await _googleAuthService.GetUserInfo(googleTokens.access_token!);
+
+            var googleUserInfo = _googleAuthService.GetUserInfoFromIdToken(googleTokens.id_token);
+
+            // Utworzenie/znalezienie użytkownika
+            //var user = _context.FindByEmail(googleUserInfo.Email!);
+
+            // Wygenerowanie tokenu JWT
+            var token = TokenManager.GenerateJwtToken(_configuration);
+
+            User newUser = new User()
+            {
+                login = request.login,
+                password = "",
+                email = googleUserInfo.Email,
+                firstname = request.firstname,
+                lastname = request.lastname,
+                rentalService = "0",
+                birthday = request.birthday,
+                driverLicenseReceiveDate = request.driverLicenseReceiveDate,
+            };
+
+            _context.Users.Add(newUser);
+            await _context.SaveChangesAsync();
+
+            return Ok(new AuthRegisterResponse()
+            {
+                //Token = token,
+                User = newUser,
+            });
+
+        }
+
         [HttpPost("signIn")]
         public async Task<ActionResult<UserToFront?>> GetCredentials([FromBody] LoginCredential data)
         {
 
             // Dostęp do wartości
-            if(data == null)
+            if (data == null)
                 return NotFound("No data found");
 
             string login = data.login!;
@@ -67,6 +181,8 @@ namespace WebApplication1.Controllers
 
             return usertof;
         }
+
+
 
         [HttpPost("signOn")]
         public async Task<ActionResult<UserToFront?>> Register([FromBody] RegisterCredential data)
@@ -118,83 +234,6 @@ namespace WebApplication1.Controllers
 
             return usertof;
         }
-
-        [HttpPost("google2")]
-        public async Task<ActionResult<string>> GoogleGetJson1([FromBody] GoogleAuthRequest request)
-        {
-            // Weryfikacja kodu Google
-            var googleTokens = _googleAuthService.GetJsonString(request.Code, request.RedirectUri);
-
-            return Ok(googleTokens);
-        }
-
-
-        [HttpPost("google")]
-        public async Task<ActionResult<AuthResponse>> GoogleAuth([FromBody] GoogleAuthRequest request)
-        {
-            // Weryfikacja kodu Google
-            var googleTokens = await _googleAuthService.ExchangeCodeForTokens(request.Code!, request.RedirectUri!);
-
-            // Pobranie informacji o użytkowniku
-            //var googleUserInfo = await _googleAuthService.GetUserInfo(googleTokens.access_token!);
-
-            var googleUserInfo = _googleAuthService.GetUserInfoFromIdToken(googleTokens.id_token);
-
-            // Utworzenie/znalezienie użytkownika
-            var user = _context.FindByEmail(googleUserInfo.Email!);
-
-            // Wygenerowanie tokenu JWT
-            var token = TokenManager.GenerateJwtToken(_configuration);
-
-            return Ok(new AuthResponse
-            {
-                Token = token,
-                User = new UserDtoGoogle(googleUserInfo),
-                IsNewUser = user == null,
-            });
-        }
-
-        [HttpPost("google/signUp")]
-        public async Task<ActionResult<AuthRegisterResponse>> GoogleAuthRegister([FromBody] GoogleAuthRegisterRequest request)
-        {
-            // Weryfikacja kodu Google
-            var googleTokens = await _googleAuthService.ExchangeCodeForTokens(request.Code!, request.RedirectUri!);
-
-            // Pobranie informacji o użytkowniku
-            //var googleUserInfo = await _googleAuthService.GetUserInfo(googleTokens.access_token!);
-
-            var googleUserInfo = _googleAuthService.GetUserInfoFromIdToken(googleTokens.id_token);
-
-            // Utworzenie/znalezienie użytkownika
-            //var user = _context.FindByEmail(googleUserInfo.Email!);
-
-            // Wygenerowanie tokenu JWT
-            var token = TokenManager.GenerateJwtToken(_configuration);
-
-            User newUser = new User()
-            {
-                login = request.login,
-                password = "",
-                email = googleUserInfo.Email,
-                firstname = request.firstname,
-                lastname = request.lastname,
-                rentalService = "0",
-                birthday = request.birthday,
-                driverLicenseReceiveDate = request.driverLicenseReceiveDate,
-            };
-
-            _context.Users.Add(newUser);
-            await _context.SaveChangesAsync();
-
-            return Ok(new AuthRegisterResponse()
-            {
-                Token = token,
-                User = newUser,
-            });
-
-        }
-
-
 
         // GET: api/Users/5
         [Authorize]

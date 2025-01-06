@@ -89,7 +89,6 @@ namespace WebApplication1.Controllers
         [HttpGet("getAllAvailable")]
         public async Task<ActionResult<IEnumerable<Car>>> GetAllAvailableCars()
         {
-            //return StatusCode(200 , _context.AllAvailable());
 
             HttpResponseMessage response = await GetAllAvCars();
 
@@ -106,35 +105,9 @@ namespace WebApplication1.Controllers
             return Ok(newResponse);
         }
 
-        //[HttpGet("getAllCars")]
-        //public async Task<ActionResult<IEnumerable<Car>>> GetAllCars()
-        //{
-        //    return StatusCode(200, _context.All());
-        //    //var request = new HttpRequestMessage(HttpMethod.Get, forwordURL + "/api/user/cars");
-
-        //    //request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
-
-        //    //HttpResponseMessage response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
-
-        //    //var responseContent = await response.Content.ReadAsStringAsync();
-
-        //    //return StatusCode((int)response.StatusCode, responseContent);
-        //}
-
-
         [HttpPost("getPage")]
         public async Task<ActionResult<IEnumerable<Car>>> GetPage([FromBody] PageRequest data)
         {
-            //return StatusCode(200, _context.GetPage(data.Page));
-            //var task = Task<ActionResult<IEnumerable<Car>>>.Run(async () => await GetAllAvailableCars());
-
-            //var result = task;
-            //int? code = ((IStatusCodeActionResult)task).StatusCode;
-
-            //if (code != 200)
-            //    return StatusCode(code.Value, null);
-
-            //var CarList = task.Result.Value;
 
             HttpResponseMessage response = await GetAllAvCars();
 
@@ -160,12 +133,6 @@ namespace WebApplication1.Controllers
         [HttpGet("getCountPages")]
         public async Task<ActionResult<int>> GetCountPage()
         {
-            //return StatusCode(200, _context.GetNumPages());
-
-            //var task = Task<ActionResult<IEnumerable<Car>>>.Run(async () => await GetAllAvailableCars());
-
-            //var result = task;
-            //int? code = ((IStatusCodeActionResult)task).StatusCode;
 
 
             HttpResponseMessage response = await GetAllAvCars();
@@ -184,22 +151,6 @@ namespace WebApplication1.Controllers
             else if (pages == 0)
                 return NotFound("List is empty");
             return Ok(pages);
-        }
-
-        [HttpPost("getBathCars")]
-        public async Task<ActionResult<IEnumerable<Car>>> GetBathCars([FromBody] BathCarRequest data)
-        {
-
-
-            var request = new HttpRequestMessage(HttpMethod.Get, forwordURL + "/api/user/cars");
-
-            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
-
-            HttpResponseMessage response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
-
-            var responseContent = await response.Content.ReadAsStringAsync();
-
-            return StatusCode((int)response.StatusCode, responseContent);
         }
 
         [Authorize]
@@ -233,6 +184,7 @@ namespace WebApplication1.Controllers
 
             return StatusCode((int)response.StatusCode, newOffer);
         }
+
         [Authorize]
         [HttpPost("rent")]
         public async Task<ActionResult<RentalToFront>> GetRent([FromBody] RentalRequestFront data)
@@ -445,7 +397,7 @@ namespace WebApplication1.Controllers
                 .Distinct()
                 .OrderBy(year => year)
                 .ToList();
-            return Ok(years); // Returns a plain JSON array
+            return Ok(years);
         }
 
         [HttpGet("distinctTypes")]
@@ -553,6 +505,32 @@ namespace WebApplication1.Controllers
                 return StatusCode(500, $"An error occurred: {ex.Message}");
             }
         }
+
+
+
+
+        //GARBAGE ONLY BELOW//
+
+
+
+
+        [HttpPost("getBathCars")]
+        public async Task<ActionResult<IEnumerable<Car>>> GetBathCars([FromBody] BathCarRequest data)
+        {
+
+
+            var request = new HttpRequestMessage(HttpMethod.Get, forwordURL + "/api/user/cars");
+
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+            HttpResponseMessage response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
+
+            var responseContent = await response.Content.ReadAsStringAsync();
+
+            return StatusCode((int)response.StatusCode, responseContent);
+        }
+
+
 
         /*
         // PUT: api/Users/5

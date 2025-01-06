@@ -140,9 +140,7 @@ namespace WebApplication1.Models
 
     public class GoogleAuthRegisterRequest
     {
-        public string? Code { get; set; }
-        public string? RedirectUri { get; set; }
-
+        public string? Email { get; set; }
         public string? firstname { get; set; }
         public string? lastname { get; set; }
         public string? login { get; set; }
@@ -153,7 +151,7 @@ namespace WebApplication1.Models
 
     public class AuthRegisterResponse
     {
-        public string? Token { get; set; }
+        public bool? IsProfileComplete { get; set; }
         public User User { get; set; }
     }
 
