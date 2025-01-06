@@ -15,7 +15,7 @@ public class CarController : ControllerBase
     private readonly ApiContext _context;
 
     static readonly string forwordURL =
-        @"https://car-rental-api-chezbchwebfggwcd.canadacentral-01.azurewebsites.net";
+        @"http://localhost:5001";
 
     private readonly HttpClient _httpClient;
     private string? token = null;
@@ -327,107 +327,179 @@ public class CarController : ControllerBase
     }
 
     [HttpGet("distinctBrands")]
-    public ActionResult<IEnumerable<string>> GetDistinctBrands()
-    {
-        var brands = _context.Cars
-            .AsQueryable()
-            .Select(car => car.producer)
-            .Distinct()
-            .ToList();
-        return Ok(brands); // Returns a plain JSON array
-    }
-
-    [HttpGet("modelsByBrand/{producer}")]
-    public ActionResult<IEnumerable<string>> GetModelsByBrand(string producer)
-    {
-        var models = _context.Cars
-            .Where(car => car.producer == producer)
-            .Select(car => car.model)
-            .Distinct()
-            .ToList();
-        return Ok(models); // Returns a plain JSON array
-    }
-
-    [HttpGet("distinctYears")]
-    public ActionResult<IEnumerable<int>> GetDistinctYears()
-    {
-        var years = _context.Cars
-            .Select(car => car.yearOfProduction)
-            .Distinct()
-            .OrderBy(year => year)
-            .ToList();
-        return Ok(years); // Returns a plain JSON array
-    }
-
-    [HttpGet("distinctTypes")]
-    public ActionResult<IEnumerable<string>> GetDistinctTypes()
-    {
-        var types = _context.Cars
-            .Select(car => car.type)
-            .Distinct()
-            .ToList();
-        return Ok(types); // Returns a plain JSON array
-    }
-
-    [HttpGet("distinctLocations")]
-    public ActionResult<IEnumerable<string>> GetDistinctLocations()
-    {
-        var locations = _context.Cars
-            .Select(car => car.location)
-            .Distinct()
-            .ToList();
-        return Ok(locations); // Returns a plain JSON array
-    }
-    
-    /* FILTERING CARS */
-    [HttpGet("filteredCars")]
-    public ActionResult<IEnumerable<Car>> GetFilteredCars(
-        [FromQuery] string? producer,
-        [FromQuery] string? model,
-        [FromQuery] int? yearOfProduction,
-        [FromQuery] string? type,
-        [FromQuery] string? location)
-    {
-        try
+        public async Task<ActionResult<IEnumerable<string>>> GetDistinctBrands()
         {
-            var filteredCars = _context.Cars.AsQueryable();
+            HttpResponseMessage response = await GetAllAvCars();
 
-            if (!string.IsNullOrEmpty(producer))
-            {
-                filteredCars = filteredCars.Where(car => car.producer == producer);
-            }
+            if ((int)response.StatusCode != 200)
+                return StatusCode((int)response.StatusCode, null);
 
-            if (!string.IsNullOrEmpty(model))
-            {
-                filteredCars = filteredCars.Where(car => car.model == model);
-            }
+            var responseContent = await response.Content.ReadFromJsonAsync<IEnumerable<CarDto>>();
 
-            if (yearOfProduction.HasValue)
-            {
-                // Convert yearOfProduction to a string and compare
-                int year = yearOfProduction.Value;
-                filteredCars = filteredCars.Where(car => car.yearOfProduction == year.ToString());
-            }
+            if (responseContent == null)
+                return NotFound();
 
-            if (!string.IsNullOrEmpty(type))
-            {
-                filteredCars = filteredCars.Where(car => car.type == type);
-            }
+            var AllCars = responseContent.ConvertToCar();
 
-            if (!string.IsNullOrEmpty(location))
-            {
-                filteredCars = filteredCars.Where(car => car.location == location);
-            }
-
-            var result = filteredCars.ToList();
-
-            return Ok(result);
+            var brands = AllCars
+                .AsQueryable()
+                .Select(car => car.producer)
+                .Distinct()
+                .ToList();
+            return Ok(brands); // Returns a plain JSON array
         }
-        catch (Exception ex)
+
+        [HttpGet("modelsByBrand/{producer}")]
+        public async Task<ActionResult<IEnumerable<string>>> GetModelsByBrand(string producer)
         {
-            return StatusCode(500, $"An error occurred: {ex.Message}");
+            HttpResponseMessage response = await GetAllAvCars();
+
+            if ((int)response.StatusCode != 200)
+                return StatusCode((int)response.StatusCode, null);
+
+            var responseContent = await response.Content.ReadFromJsonAsync<IEnumerable<CarDto>>();
+
+            if (responseContent == null)
+                return NotFound();
+
+            var AllCars = responseContent.ConvertToCar();
+
+            var models = AllCars
+                .Where(car => car.producer == producer)
+                .Select(car => car.model)
+                .Distinct()
+                .ToList();
+            return Ok(models); // Returns a plain JSON array
         }
-    }
+
+        [HttpGet("distinctYears")]
+        public async Task<ActionResult<IEnumerable<string>>> GetDistinctYears()
+        {
+            HttpResponseMessage response = await GetAllAvCars();
+
+            if ((int)response.StatusCode != 200)
+                return StatusCode((int)response.StatusCode, null);
+
+            var responseContent = await response.Content.ReadFromJsonAsync<IEnumerable<CarDto>>();
+
+            if (responseContent == null)
+                return NotFound();
+
+            var AllCars = responseContent.ConvertToCar();
+
+            var years = AllCars
+                .Select(car => car.yearOfProduction)
+                .Distinct()
+                .OrderBy(year => year)
+                .ToList();
+            return Ok(years); // Returns a plain JSON array
+        }
+
+        [HttpGet("distinctTypes")]
+        public async Task<ActionResult<IEnumerable<string>>> GetDistinctTypes()
+        {
+            HttpResponseMessage response = await GetAllAvCars();
+
+            if ((int)response.StatusCode != 200)
+                return StatusCode((int)response.StatusCode, null);
+
+            var responseContent = await response.Content.ReadFromJsonAsync<IEnumerable<CarDto>>();
+
+            if (responseContent == null)
+                return NotFound();
+
+            var AllCars = responseContent.ConvertToCar();
+
+            var types = AllCars
+                .Select(car => car.type)
+                .Distinct()
+                .ToList();
+            return Ok(types); // Returns a plain JSON array
+        }
+
+        [HttpGet("distinctLocations")]
+        public async Task<ActionResult<IEnumerable<string>>> GetDistinctLocations()
+        {
+            HttpResponseMessage response = await GetAllAvCars();
+
+            if ((int)response.StatusCode != 200)
+                return StatusCode((int)response.StatusCode, null);
+
+            var responseContent = await response.Content.ReadFromJsonAsync<IEnumerable<CarDto>>();
+
+            if (responseContent == null)
+                return NotFound();
+
+            var AllCars = responseContent.ConvertToCar();
+
+            var locations = AllCars
+                .Select(car => car.location)
+                .Distinct()
+                .ToList();
+            return Ok(locations); // Returns a plain JSON array
+        }
+
+        /* FILTERING CARS */
+        [HttpGet("filteredCars")]
+        public async Task<ActionResult<IEnumerable<Car>>> GetFilteredCars(
+            [FromQuery] string? producer,
+            [FromQuery] string? model,
+            [FromQuery] int? yearOfProduction,
+            [FromQuery] string? type,
+            [FromQuery] string? location)
+        {
+            try
+            {
+                HttpResponseMessage response = await GetAllAvCars();
+
+                if ((int)response.StatusCode != 200)
+                    return StatusCode((int)response.StatusCode, null);
+
+                var responseContent = await response.Content.ReadFromJsonAsync<IEnumerable<CarDto>>();
+
+                if (responseContent == null)
+                    return NotFound();
+
+                var AllCars = responseContent.ConvertToCar();
+
+                var filteredCars = AllCars.AsQueryable();
+
+                if (!string.IsNullOrEmpty(producer))
+                {
+                    filteredCars = filteredCars.Where(car => car.producer == producer);
+                }
+
+                if (!string.IsNullOrEmpty(model))
+                {
+                    filteredCars = filteredCars.Where(car => car.model == model);
+                }
+
+                if (yearOfProduction.HasValue)
+                {
+                    // Convert yearOfProduction to a string and compare
+                    int year = yearOfProduction.Value;
+                    filteredCars = filteredCars.Where(car => car.yearOfProduction == year.ToString());
+                }
+
+                if (!string.IsNullOrEmpty(type))
+                {
+                    filteredCars = filteredCars.Where(car => car.type == type);
+                }
+
+                if (!string.IsNullOrEmpty(location))
+                {
+                    filteredCars = filteredCars.Where(car => car.location == location);
+                }
+
+                var result = filteredCars.ToList();
+
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"An error occurred: {ex.Message}");
+            }
+        }
 
     /*
         // PUT: api/Users/5

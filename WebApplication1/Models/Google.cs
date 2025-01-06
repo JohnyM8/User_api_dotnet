@@ -142,7 +142,6 @@ namespace WebApplication1.Models
     {
         public string? Code { get; set; }
         public string? RedirectUri { get; set; }
-
         public string? firstname { get; set; }
         public string? lastname { get; set; }
         public string? login { get; set; }
