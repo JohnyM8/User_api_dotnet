@@ -113,45 +113,45 @@ namespace WebApplication1.Controllers
             return Ok(googleTokens);
         }
 
-        [HttpPost("google/signUp")]
-        public async Task<ActionResult<AuthRegisterResponse>> GoogleAuthRegister([FromBody] GoogleAuthRegisterRequest request)
-        {
-            // Weryfikacja kodu Google
-            var googleTokens = await _googleAuthService.ExchangeCodeForTokens(request.Code!, request.RedirectUri!);
+        //[HttpPost("google/signUp")]
+        //public async Task<ActionResult<AuthRegisterResponse>> GoogleAuthRegister([FromBody] GoogleAuthRegisterRequest request)
+        //{
+        //    // Weryfikacja kodu Google
+        //    var googleTokens = await _googleAuthService.ExchangeCodeForTokens(request.Code!, request.RedirectUri!);
 
-            // Pobranie informacji o użytkowniku
-            //var googleUserInfo = await _googleAuthService.GetUserInfo(googleTokens.access_token!);
+        //    // Pobranie informacji o użytkowniku
+        //    //var googleUserInfo = await _googleAuthService.GetUserInfo(googleTokens.access_token!);
 
-            var googleUserInfo = _googleAuthService.GetUserInfoFromIdToken(googleTokens.id_token);
+        //    var googleUserInfo = _googleAuthService.GetUserInfoFromIdToken(googleTokens.id_token);
 
-            // Utworzenie/znalezienie użytkownika
-            //var user = _context.FindByEmail(googleUserInfo.Email!);
+        //    // Utworzenie/znalezienie użytkownika
+        //    //var user = _context.FindByEmail(googleUserInfo.Email!);
 
-            // Wygenerowanie tokenu JWT
-            var token = TokenManager.GenerateJwtToken(_configuration);
+        //    // Wygenerowanie tokenu JWT
+        //    var token = TokenManager.GenerateJwtToken(_configuration);
 
-            User newUser = new User()
-            {
-                login = request.login,
-                password = "",
-                email = googleUserInfo.Email,
-                firstname = request.firstname,
-                lastname = request.lastname,
-                rentalService = "0",
-                birthday = request.birthday,
-                driverLicenseReceiveDate = request.driverLicenseReceiveDate,
-            };
+        //    User newUser = new User()
+        //    {
+        //        login = request.login,
+        //        password = "",
+        //        email = googleUserInfo.Email,
+        //        firstname = request.firstname,
+        //        lastname = request.lastname,
+        //        rentalService = "0",
+        //        birthday = request.birthday,
+        //        driverLicenseReceiveDate = request.driverLicenseReceiveDate,
+        //    };
 
-            _context.Users.Add(newUser);
-            await _context.SaveChangesAsync();
+        //    _context.Users.Add(newUser);
+        //    await _context.SaveChangesAsync();
 
-            return Ok(new AuthRegisterResponse()
-            {
-                //Token = token,
-                User = newUser,
-            });
+        //    return Ok(new AuthRegisterResponse()
+        //    {
+        //        //Token = token,
+        //        User = newUser,
+        //    });
 
-        }
+        //}
 
         [HttpPost("signIn")]
         public async Task<ActionResult<UserToFront?>> GetCredentials([FromBody] LoginCredential data)
