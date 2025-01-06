@@ -222,10 +222,10 @@ namespace WebApplication1.Controllers
             if ((int)response.StatusCode != 200)
                 return StatusCode((int)response.StatusCode, null);
 
-            //if (EmailSender.SendOfferEmail(data.email))
-            //    return BadRequest("Email didnt sent");
-
             var responseContent = await response.Content.ReadFromJsonAsync<RentalOfferDto>();
+
+            if (EmailSender.SendOfferEmail(_context.GetUserEmailById(data.CustomerId) , responseContent))
+                return BadRequest("Email wasnt send");
 
             var newOffer = new RentalOfferFront(responseContent);
 

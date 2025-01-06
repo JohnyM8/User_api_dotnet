@@ -270,44 +270,49 @@ namespace WebApplication1.Controllers
         }
 
         [HttpPost("send")]
-        public async Task<IActionResult> SendEmail([FromBody] EmailRequest emailRequest)
+        public async Task<IActionResult> SendEmail([FromBody] EmailRequestOld emailRequest)
         {
-            if (string.IsNullOrEmpty(emailRequest.To) || string.IsNullOrEmpty(emailRequest.Subject) || string.IsNullOrEmpty(emailRequest.Body))
-            {
-                return BadRequest("Email request must include recipient, subject, and body.");
-            }
+            //if (string.IsNullOrEmpty(emailRequest.To) || string.IsNullOrEmpty(emailRequest.Subject) || string.IsNullOrEmpty(emailRequest.Body))
+            //{
+            //    return BadRequest("Email request must include recipient, subject, and body.");
+            //}
 
-            try
-            {
-                MimeMessage message = new MimeMessage();
+            //try
+            //{
+            //    MimeMessage message = new MimeMessage();
 
-                message.From.Add(new MailboxAddress("Admin", "user.api.adnin@gmail.com"));
+            //    message.From.Add(new MailboxAddress("Admin", "user.api.adnin@gmail.com"));
 
-                message.To.Add(MailboxAddress.Parse( emailRequest.To));
+            //    message.To.Add(MailboxAddress.Parse( emailRequest.To));
 
-                message.Subject = emailRequest.Subject;
+            //    message.Subject = emailRequest.Subject;
 
-                message.Body = new TextPart("plain")
-                {
-                    Text = emailRequest.Body
-                };
+            //    message.Body = new TextPart("plain")
+            //    {
+            //        Text = emailRequest.Body
+            //    };
 
-                using (var smtpClient = new SmtpClient()) // Podaj swój SMTP serwer
-                {
-                    smtpClient.CheckCertificateRevocation = false;
-                    smtpClient.Connect("smtp.gmail.com", 465, true);
+            //    using (var smtpClient = new SmtpClient()) // Podaj swój SMTP serwer
+            //    {
+            //        smtpClient.CheckCertificateRevocation = false;
+            //        smtpClient.Connect("smtp.gmail.com", 465, true);
 
-                    smtpClient.Authenticate("user.api.adnin@gmail.com", "wbrz wood sdcd ygib");
+            //        smtpClient.Authenticate("user.api.adnin@gmail.com", "wbrz wood sdcd ygib");
 
-                    smtpClient.Send(message);
-                }
+            //        smtpClient.Send(message);
+            //    }
 
-                return Ok("Email sent successfully!");
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, $"Internal server error: {ex.Message}");
-            }
+            //    return Ok("Email sent successfully!");
+            //}
+            //catch (Exception ex)
+            //{
+            //    return StatusCode(500, $"Internal server error: {ex.Message}");
+            //}
+
+            if (!EmailSender.SendOfferEmail(emailRequest.To , null))
+                return BadRequest("Email wasnt send");
+
+            return Ok();
         }
         private bool UserExists(int id)
         {

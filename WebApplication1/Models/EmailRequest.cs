@@ -1,14 +1,25 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using MimeKit;
 using MailKit.Net.Smtp;
+//using System.Net.Mail;
+using Microsoft.VisualStudio.Web.CodeGenerators.Mvc.Templates.BlazorIdentity.Pages.Manage;
+using System.IO;
+//using System.Net;
 
 namespace WebApplication1.Models
 {
-    public class EmailRequest
+    public class EmailRequestOld
     {
         public string? To { get; set; }
         public string? Subject { get; set; }
         public string? Body { get; set; }
+    }
+
+    public class EmailRequest
+    {
+        public string? To { get; set; }
+        public string? Subject { get; set; }
+        public MimeEntity? Body { get; set; }
     }
     public static class EmailSender
     {
@@ -18,7 +29,10 @@ namespace WebApplication1.Models
             {
                 To = email,
                 Subject = "Return proccess started",
-                Body = "Your return proccess has been started!\n",
+                Body = new TextPart("plain")
+                { 
+                    Text = "Your return proccess has been started!\n"
+                },
             };
             return SendEmail(emailR);
         }
@@ -29,23 +43,60 @@ namespace WebApplication1.Models
             {
                 To = email,
                 Subject = "New Rent",
-                Body = "Your new car has been rent for you!\n",
+                Body = new TextPart("plain")
+                {
+                    Text = "Your new car has been rent for you!\n"
+                },
             };
             return SendEmail(emailR);
         }
-        public static bool SendOfferEmail(string email)
+        public static bool SendOfferEmail(string email , RentalOfferDto rental)
         {
             var emailR = new EmailRequest()
             {
                 To = email,
                 Subject = "New Offer",
-                Body = "Your new offer has been sent to you!\n",
             };
-            return SendEmail(emailR);
+
+            (string path , string filename) = FileCreator.CreateRentalOfferFile(rental);
+
+            var body = new TextPart("plain")
+            {
+                Text = "Heres your's offer details.\n"
+            };
+
+            var stream = File.OpenRead(path);
+            var attachment = new MimePart("document", "pdf")
+            {
+                Content = new MimeContent(stream),
+                ContentDisposition = new ContentDisposition(ContentDisposition.Attachment),
+                ContentTransferEncoding = ContentEncoding.Base64,
+                FileName = Path.GetFileName(filename)
+            };
+
+            
+
+            var multipart = new Multipart("mixed");
+
+            multipart.Add(body);
+            multipart.Add(attachment);
+
+            
+            emailR.Body = multipart;
+
+            //stream.Close();
+            //File.Delete(path);
+
+            bool response = SendEmail(emailR, path);
+
+            stream.Close();
+            File.Delete(path);
+
+            return response;
         }
-        public static bool SendEmail(EmailRequest emailRequest)
+        public static bool SendEmail(EmailRequest emailRequest , string filePath = "")
         {
-            if (string.IsNullOrEmpty(emailRequest.To) || string.IsNullOrEmpty(emailRequest.Subject) || string.IsNullOrEmpty(emailRequest.Body))
+            if (string.IsNullOrEmpty(emailRequest.To) || string.IsNullOrEmpty(emailRequest.Subject))
             {
                 return false;
             }
@@ -60,10 +111,7 @@ namespace WebApplication1.Models
 
                 message.Subject = emailRequest.Subject;
 
-                message.Body = new TextPart("plain")
-                {
-                    Text = emailRequest.Body
-                };
+                message.Body = emailRequest.Body;
 
                 using (var smtpClient = new SmtpClient()) // Podaj swój SMTP serwer
                 {
@@ -74,7 +122,7 @@ namespace WebApplication1.Models
 
                     smtpClient.Send(message);
                 }
-
+                
                 return true;
             }
             catch (Exception ex)
