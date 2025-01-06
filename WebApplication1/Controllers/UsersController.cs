@@ -129,9 +129,9 @@ namespace WebApplication1.Controllers
             var googleUserInfo = _googleAuthService.GetUserInfoFromIdToken(googleTokens.id_token);
 
             // Utworzenie/znalezienie użytkownika
-            // var user = _context.FindByEmail(googleUserInfo.Email!);
+            var user = _context.FindByEmail(googleUserInfo.Email!);
 
-            String? user = null;
+            // String? user = null;
             
             // Wygenerowanie tokenu JWT
             var token = TokenManager.GenerateJwtToken(_configuration);
@@ -183,8 +183,42 @@ namespace WebApplication1.Controllers
             });
 
         }
+        
+        [Authorize]
+        [HttpPost( "google/moreData")]
+        public async Task<ActionResult<AuthRegisterResponse>> GoogleAuthMoreData([FromBody] GoogleAuthRegisterRequest request)
+        {
+            User newUser = new User()
+            {
+                login = request.login,
+                password = "",
+                email = request.Email,
+                firstname = request.firstname,
+                lastname = request.lastname,
+                rentalService = "0",
+                birthday = request.birthday,
+                driverLicenseReceiveDate = request.driverLicenseReceiveDate,
+            };
 
+            _context.Users.Add(newUser);
+            await _context.SaveChangesAsync();
 
+            return Ok(new AfterRegisterResponse()
+            {
+                User = newUser,
+                IsProfileComplete = true
+            });
+        }
+
+        [Authorize]
+        [HttpGet("validateToken")]
+        public IActionResult ValidateToken()
+        {
+            return Ok(new
+            {
+                Message = "Token is valid!"
+            });
+        }
 
         // GET: api/Users/5
         [Authorize]

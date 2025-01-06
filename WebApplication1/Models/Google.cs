@@ -148,6 +148,7 @@ namespace WebApplication1.Models
         public string? rentalService { get; set; }
         public string? birthday { get; set; }
         public string? driverLicenseReceiveDate { get; set; }
+        public string? Email { get; set; }
     }
 
     public class AuthRegisterResponse
@@ -155,7 +156,12 @@ namespace WebApplication1.Models
         public string? Token { get; set; }
         public User User { get; set; }
     }
-
+    
+    public class AfterRegisterResponse
+    {
+        public User User { get; set; }
+        public bool IsProfileComplete { get; set; }
+    }
 
     public class AuthResponse
     {
