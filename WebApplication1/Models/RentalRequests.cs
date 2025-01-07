@@ -15,6 +15,7 @@ namespace WebApplication1.Models
         {
             OfferId = data.OfferId;
             CustomerId = data.CustomerId;
+            //RentalName = "My";
             RentalName = Constants.RentalName;
             PlannedStartDate = DateTime.Parse(data.PlannedStartDate);
             PlannedEndDate = DateTime.Parse(data.PlannedEndDate);

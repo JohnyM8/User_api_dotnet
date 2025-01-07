@@ -26,7 +26,8 @@ namespace WebApplication1.Controllers
     {
         private readonly ApiContext _context;
 
-        static readonly string forwordURL = @"https://car-rental-api-chezbchwebfggwcd.canadacentral-01.azurewebsites.net";
+        static readonly string forwordURL = "https://car-rental-api-chezbchwebfggwcd.canadacentral-01.azurewebsites.net";
+        static readonly string forwordURLLocal = "https://localhost:7151";
         private readonly HttpClient _httpClient;
         private string? token = null;
         static readonly string login = "JejRental";
@@ -48,9 +49,10 @@ namespace WebApplication1.Controllers
         {
             var creds = new LoginToDto() { Username = login, Password = password };
 
-            string json = JsonConvert.SerializeObject(creds);
-
-            var httpContent = new StringContent(json, Encoding.UTF8, "application/json");
+            var httpContent = new StringContent(
+                JsonConvert.SerializeObject(creds),
+                Encoding.UTF8,
+                "application/json");
 
             var httpResponse = await _httpClient.PostAsync(forwordURL + "/api/auth/login", httpContent);
 
@@ -162,16 +164,20 @@ namespace WebApplication1.Controllers
 
             var RentalObj = new OfferRequestDto(data);
 
-            var request = new HttpRequestMessage(HttpMethod.Post, forwordURL + "/api/customer/rentals/offers");
+            var request = new HttpRequestMessage(HttpMethod.Post, forwordURL + "/api/customer/rentals/offers")
+            {
+                Content = new StringContent(
+                JsonConvert.SerializeObject(RentalObj),
+                Encoding.UTF8,
+                "application/json")
+            };
 
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
-
-            request.Content = JsonContent.Create(RentalObj);
 
             HttpResponseMessage response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
 
             if ((int)response.StatusCode != 200)
-                return StatusCode((int)response.StatusCode, response.Content.ReadFromJsonAsync<string>());
+                return StatusCode((int)response.StatusCode, response.Content.ReadAsStringAsync());
 
             var responseContent = await response.Content.ReadFromJsonAsync<RentalOfferDto>();
 
@@ -185,6 +191,53 @@ namespace WebApplication1.Controllers
             return StatusCode((int)response.StatusCode, newOffer);
         }
 
+        [HttpPost("rentlink")]
+        public async Task<ActionResult<string>> GetRentTest([FromBody] RentalRequestFront data)
+        {
+            var RentalObj = new RentalRequestDto(data);
+
+            var request = new HttpRequestMessage(HttpMethod.Post, forwordURL + "/api/customer/rentals")
+            {
+                Content = new StringContent(
+                Newtonsoft.Json.JsonConvert.SerializeObject(RentalObj),
+                System.Text.Encoding.UTF8,
+                "application/json")
+            };
+
+            //var request = new HttpRequestMessage(HttpMethod.Post, forwordURLLocal + "/api/rentals")
+            //{
+            //    Content = new StringContent(
+            //    Newtonsoft.Json.JsonConvert.SerializeObject(RentalObj),
+            //    System.Text.Encoding.UTF8,
+            //    "application/json")
+            //};
+
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+
+            //return Ok(RentalObj);
+
+            //request.Content = JsonContent.Create(RentalObj);
+
+            //request.Content = new StringContent(
+            //    Newtonsoft.Json.JsonConvert.SerializeObject(RentalObj));
+            //    //System.Text.Encoding.UTF8,
+            //    //"application/json");
+
+            //return Ok(request);
+
+            HttpResponseMessage response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
+
+            if ((int)response.StatusCode != 200)
+                return StatusCode((int)response.StatusCode, response.Content.ReadAsStringAsync());
+
+            //if (EmailSender.SendRentEmail(_context.GetUserEmailById(data.CustomerId)))
+            //    return BadRequest("Email didnt sent");
+
+            return StatusCode((int)response.StatusCode, response.Content.ReadAsStringAsync());
+            //return StatusCode((int)response.StatusCode, "Rental succesful!\n");
+        }
+
         [HttpGet("rentlink/{Offerid}/{Userid}/{PlannedStartDate}/{PlannedEndDate}")]
         public async Task<ActionResult<RentalRequestDto>> GetRent(int Offerid , int Userid , string PlannedStartDate , string PlannedEndDate)
         {
@@ -196,22 +249,27 @@ namespace WebApplication1.Controllers
                 PlannedEndDate = PlannedEndDate
             };
 
-            
 
-            var request = new HttpRequestMessage(HttpMethod.Post, forwordURL + "/api/customer/rentals");
-
-            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
             var RentalObj = new RentalRequestDto(data);
 
-            //return Ok(RentalObj);
+            var request = new HttpRequestMessage(HttpMethod.Post, forwordURL + "/api/customer/rentals")
+            {
+                Content = new StringContent(
+                Newtonsoft.Json.JsonConvert.SerializeObject(RentalObj),
+                System.Text.Encoding.UTF8,
+                "application/json")
+            };
 
-            request.Content = JsonContent.Create(RentalObj);
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+
+            //return Ok(RentalObj)
 
             HttpResponseMessage response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
 
             if ((int)response.StatusCode != 200)
-                return StatusCode((int)response.StatusCode, response.Content.ReadFromJsonAsync<string>());
+                return StatusCode((int)response.StatusCode, response.Content.ReadAsStringAsync());
 
             if (EmailSender.SendRentEmail(_context.GetUserEmailById(data.CustomerId)))
                 return BadRequest("Email didnt sent");
@@ -226,18 +284,22 @@ namespace WebApplication1.Controllers
             if (_context.FindUserById(data.CustomerId) == null)
                 return BadRequest("User with given ID does not exists");
 
-            var request = new HttpRequestMessage(HttpMethod.Post, forwordURL + "/api/customer/rentals");
-
-            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
-
             var RentalObj = new RentalRequestDto(data);
 
-            request.Content = JsonContent.Create(RentalObj);
+            var request = new HttpRequestMessage(HttpMethod.Post, forwordURL + "/api/customer/rentals")
+            {
+                Content = new StringContent(
+                Newtonsoft.Json.JsonConvert.SerializeObject(RentalObj),
+                System.Text.Encoding.UTF8,
+                "application/json")
+            };
+
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
             HttpResponseMessage response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
 
             if((int)response.StatusCode != 200)
-                return StatusCode((int)response.StatusCode, response.Content.ReadFromJsonAsync<string>());
+                return StatusCode((int)response.StatusCode, response.Content.ReadAsStringAsync());
 
             if(EmailSender.SendRentEmail(_context.GetUserEmailById(data.CustomerId)))
                 return BadRequest("Email didnt sent");
@@ -251,18 +313,22 @@ namespace WebApplication1.Controllers
         [HttpPost("return")]
         public async Task<ActionResult<ReturnRecordDto>> ReturnCar([FromBody] ReturnRequestFront data)
         {
-            var request = new HttpRequestMessage(HttpMethod.Post, forwordURL + "/api/customer/rentals/return");
-
-            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
-
             var RentalObj = new ReturnRequestDto(data);
 
-            request.Content = JsonContent.Create(RentalObj);
+            var request = new HttpRequestMessage(HttpMethod.Post, forwordURL + "/api/customer/rentals/return")
+            {
+                Content = new StringContent(
+                Newtonsoft.Json.JsonConvert.SerializeObject(RentalObj),
+                System.Text.Encoding.UTF8,
+                "application/json")
+            };
+
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
             HttpResponseMessage response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
 
             if ((int)response.StatusCode != 200)
-                return StatusCode((int)response.StatusCode, response.Content.ReadFromJsonAsync<string>());
+                return StatusCode((int)response.StatusCode, response.Content.ReadAsStringAsync());
 
             var responseContent = await response.Content.ReadFromJsonAsync<ReturnRecordDto>();
 
@@ -275,18 +341,22 @@ namespace WebApplication1.Controllers
             if (_context.FindUserById(data.UserId) == null)
                 return BadRequest("User with given ID does not exists");
 
-            var request = new HttpRequestMessage(HttpMethod.Get, forwordURL + "/api/customer/rentals/my");
-
-            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
-
             var RequestObj = new RentedCarsRequestDto(data);
 
-            request.Content = JsonContent.Create(RequestObj);
+            var request = new HttpRequestMessage(HttpMethod.Post, forwordURL + "/api/customer/rentals/my")
+            {
+                Content = new StringContent(
+               Newtonsoft.Json.JsonConvert.SerializeObject(RequestObj),
+               System.Text.Encoding.UTF8,
+               "application/json")
+            };
+
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
             HttpResponseMessage response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
 
             if ((int)response.StatusCode != 200)
-                return StatusCode((int)response.StatusCode, null);
+                return StatusCode((int)response.StatusCode, response.Content.ReadAsStringAsync());
 
             var responseContent = await response.Content.ReadFromJsonAsync<IEnumerable<RentalDto>>();
 
@@ -372,7 +442,7 @@ namespace WebApplication1.Controllers
             HttpResponseMessage response = await GetAllAvCars();
 
             if ((int)response.StatusCode != 200)
-                return StatusCode((int)response.StatusCode, null);
+                return StatusCode((int)response.StatusCode, response.Content.ReadAsStringAsync());
 
             var responseContent = await response.Content.ReadFromJsonAsync<IEnumerable<CarDto>>();
 
@@ -395,7 +465,7 @@ namespace WebApplication1.Controllers
             HttpResponseMessage response = await GetAllAvCars();
 
             if ((int)response.StatusCode != 200)
-                return StatusCode((int)response.StatusCode, null);
+                return StatusCode((int)response.StatusCode, response.Content.ReadAsStringAsync());
 
             var responseContent = await response.Content.ReadFromJsonAsync<IEnumerable<CarDto>>();
 
@@ -418,7 +488,7 @@ namespace WebApplication1.Controllers
             HttpResponseMessage response = await GetAllAvCars();
 
             if ((int)response.StatusCode != 200)
-                return StatusCode((int)response.StatusCode, null);
+                return StatusCode((int)response.StatusCode, response.Content.ReadAsStringAsync());
 
             var responseContent = await response.Content.ReadFromJsonAsync<IEnumerable<CarDto>>();
 
@@ -441,7 +511,7 @@ namespace WebApplication1.Controllers
             HttpResponseMessage response = await GetAllAvCars();
 
             if ((int)response.StatusCode != 200)
-                return StatusCode((int)response.StatusCode, null);
+                return StatusCode((int)response.StatusCode, response.Content.ReadAsStringAsync());
 
             var responseContent = await response.Content.ReadFromJsonAsync<IEnumerable<CarDto>>();
 
@@ -463,7 +533,7 @@ namespace WebApplication1.Controllers
             HttpResponseMessage response = await GetAllAvCars();
 
             if ((int)response.StatusCode != 200)
-                return StatusCode((int)response.StatusCode, null);
+                return StatusCode((int)response.StatusCode, response.Content.ReadFromJsonAsync<string>());
 
             var responseContent = await response.Content.ReadFromJsonAsync<IEnumerable<CarDto>>();
 
@@ -493,7 +563,7 @@ namespace WebApplication1.Controllers
                 HttpResponseMessage response = await GetAllAvCars();
 
                 if ((int)response.StatusCode != 200)
-                    return StatusCode((int)response.StatusCode, null);
+                    return StatusCode((int)response.StatusCode, response.Content.ReadFromJsonAsync<string>());
 
                 var responseContent = await response.Content.ReadFromJsonAsync<IEnumerable<CarDto>>();
 
