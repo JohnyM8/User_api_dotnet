@@ -171,7 +171,7 @@ namespace WebApplication1.Controllers
             HttpResponseMessage response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
 
             if ((int)response.StatusCode != 200)
-                return StatusCode((int)response.StatusCode, null);
+                return StatusCode((int)response.StatusCode, response.Content.ReadFromJsonAsync<string>());
 
             var responseContent = await response.Content.ReadFromJsonAsync<RentalOfferDto>();
 
@@ -211,7 +211,7 @@ namespace WebApplication1.Controllers
             HttpResponseMessage response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
 
             if ((int)response.StatusCode != 200)
-                return StatusCode((int)response.StatusCode, "Internal error");
+                return StatusCode((int)response.StatusCode, response.Content.ReadFromJsonAsync<string>());
 
             if (EmailSender.SendRentEmail(_context.GetUserEmailById(data.CustomerId)))
                 return BadRequest("Email didnt sent");
