@@ -548,25 +548,6 @@ namespace WebApplication1.Controllers
 
 
 
-
-        [HttpPost("getBathCars")]
-        public async Task<ActionResult<IEnumerable<Car>>> GetBathCars([FromBody] BathCarRequest data)
-        {
-
-
-            var request = new HttpRequestMessage(HttpMethod.Get, forwordURL + "/api/user/cars");
-
-            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
-
-            HttpResponseMessage response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
-
-            var responseContent = await response.Content.ReadAsStringAsync();
-
-            return StatusCode((int)response.StatusCode, responseContent);
-        }
-
-
-
         /*
         // PUT: api/Users/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
