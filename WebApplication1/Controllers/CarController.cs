@@ -164,6 +164,8 @@ namespace WebApplication1.Controllers
 
             var RentalObj = new OfferRequestDto(data);
 
+            RentalObj.UpdateUserData(new UserDto(_context.FindUserById(data.CustomerId)));
+
             var request = new HttpRequestMessage(HttpMethod.Post, forwordURL + "/api/customer/rentals/offers")
             {
                 Content = new StringContent(
@@ -181,7 +183,7 @@ namespace WebApplication1.Controllers
 
             var responseContent = await response.Content.ReadFromJsonAsync<RentalOfferDto>();
 
-            if (EmailSender.SendOfferEmail(_context.GetUserEmailById(data.CustomerId) , responseContent , RentalObj))
+            if (!EmailSender.SendOfferEmail(_context.GetUserEmailById(data.CustomerId) , responseContent , RentalObj))
                 return BadRequest("Email wasnt send");
 
             var newOffer = new RentalOfferFront(responseContent);
@@ -189,53 +191,6 @@ namespace WebApplication1.Controllers
             newOffer.userId = data.CustomerId;
 
             return StatusCode((int)response.StatusCode, newOffer);
-        }
-
-        [HttpPost("rentlink")]
-        public async Task<ActionResult<string>> GetRentTest([FromBody] RentalRequestFront data)
-        {
-            var RentalObj = new RentalRequestDto(data);
-
-            var request = new HttpRequestMessage(HttpMethod.Post, forwordURL + "/api/customer/rentals")
-            {
-                Content = new StringContent(
-                Newtonsoft.Json.JsonConvert.SerializeObject(RentalObj),
-                System.Text.Encoding.UTF8,
-                "application/json")
-            };
-
-            //var request = new HttpRequestMessage(HttpMethod.Post, forwordURLLocal + "/api/rentals")
-            //{
-            //    Content = new StringContent(
-            //    Newtonsoft.Json.JsonConvert.SerializeObject(RentalObj),
-            //    System.Text.Encoding.UTF8,
-            //    "application/json")
-            //};
-
-            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
-
-
-            //return Ok(RentalObj);
-
-            //request.Content = JsonContent.Create(RentalObj);
-
-            //request.Content = new StringContent(
-            //    Newtonsoft.Json.JsonConvert.SerializeObject(RentalObj));
-            //    //System.Text.Encoding.UTF8,
-            //    //"application/json");
-
-            //return Ok(request);
-
-            HttpResponseMessage response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
-
-            if ((int)response.StatusCode != 200)
-                return StatusCode((int)response.StatusCode, response.Content.ReadAsStringAsync());
-
-            //if (EmailSender.SendRentEmail(_context.GetUserEmailById(data.CustomerId)))
-            //    return BadRequest("Email didnt sent");
-
-            return StatusCode((int)response.StatusCode, response.Content.ReadAsStringAsync());
-            //return StatusCode((int)response.StatusCode, "Rental succesful!\n");
         }
 
         [HttpGet("rentlink/{Offerid}/{Userid}/{PlannedStartDate}/{PlannedEndDate}")]
@@ -271,7 +226,7 @@ namespace WebApplication1.Controllers
             if ((int)response.StatusCode != 200)
                 return StatusCode((int)response.StatusCode, response.Content.ReadAsStringAsync());
 
-            if (EmailSender.SendRentEmail(_context.GetUserEmailById(data.CustomerId)))
+            if (!EmailSender.SendRentEmail(_context.GetUserEmailById(data.CustomerId)))
                 return BadRequest("Email didnt sent");
 
             return StatusCode((int)response.StatusCode, "Rental succesful!\n");
@@ -301,7 +256,7 @@ namespace WebApplication1.Controllers
             if((int)response.StatusCode != 200)
                 return StatusCode((int)response.StatusCode, response.Content.ReadAsStringAsync());
 
-            if(EmailSender.SendRentEmail(_context.GetUserEmailById(data.CustomerId)))
+            if(!EmailSender.SendRentEmail(_context.GetUserEmailById(data.CustomerId)))
                 return BadRequest("Email didnt sent");
 
             var responseContent = await response.Content.ReadFromJsonAsync<RentalDto>();
@@ -330,6 +285,9 @@ namespace WebApplication1.Controllers
             if ((int)response.StatusCode != 200)
                 return StatusCode((int)response.StatusCode, response.Content.ReadAsStringAsync());
 
+            if (!EmailSender.SendReturnStartEmail(_context.GetUserEmailById(data.UserId)))
+                return BadRequest("Email didnt sent");
+
             var responseContent = await response.Content.ReadFromJsonAsync<ReturnRecordDto>();
 
             return StatusCode((int)response.StatusCode, responseContent);
@@ -343,7 +301,7 @@ namespace WebApplication1.Controllers
 
             var RequestObj = new RentedCarsRequestDto(data);
 
-            var request = new HttpRequestMessage(HttpMethod.Post, forwordURL + "/api/customer/rentals/my")
+            var request = new HttpRequestMessage(HttpMethod.Get, forwordURL + "/api/customer/rentals/my")
             {
                 Content = new StringContent(
                Newtonsoft.Json.JsonConvert.SerializeObject(RequestObj),
@@ -615,6 +573,53 @@ namespace WebApplication1.Controllers
 
 
         //GARBAGE ONLY BELOW//
+
+        [HttpPost("rentlink")]
+        public async Task<ActionResult<string>> GetRentTest([FromBody] RentalRequestFront data)
+        {
+            var RentalObj = new RentalRequestDto(data);
+
+            var request = new HttpRequestMessage(HttpMethod.Post, forwordURL + "/api/customer/rentals")
+            {
+                Content = new StringContent(
+                Newtonsoft.Json.JsonConvert.SerializeObject(RentalObj),
+                System.Text.Encoding.UTF8,
+                "application/json")
+            };
+
+            //var request = new HttpRequestMessage(HttpMethod.Post, forwordURLLocal + "/api/rentals")
+            //{
+            //    Content = new StringContent(
+            //    Newtonsoft.Json.JsonConvert.SerializeObject(RentalObj),
+            //    System.Text.Encoding.UTF8,
+            //    "application/json")
+            //};
+
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+
+            //return Ok(RentalObj);
+
+            //request.Content = JsonContent.Create(RentalObj);
+
+            //request.Content = new StringContent(
+            //    Newtonsoft.Json.JsonConvert.SerializeObject(RentalObj));
+            //    //System.Text.Encoding.UTF8,
+            //    //"application/json");
+
+            //return Ok(request);
+
+            HttpResponseMessage response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
+
+            if ((int)response.StatusCode != 200)
+                return StatusCode((int)response.StatusCode, response.Content.ReadAsStringAsync());
+
+            //if (!EmailSender.SendRentEmail(_context.GetUserEmailById(data.CustomerId)))
+            //    return BadRequest("Email didnt sent");
+
+            return StatusCode((int)response.StatusCode, response.Content.ReadAsStringAsync());
+            //return StatusCode((int)response.StatusCode, "Rental succesful!\n");
+        }
 
 
 

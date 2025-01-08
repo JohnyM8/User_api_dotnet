@@ -12,6 +12,7 @@
     public class ReturnRequestFront
     {
         // public int Id { get; set; }
+        public int UserId { get; set; }
         public int RentalId { get; set; }
     }
 
