@@ -94,8 +94,18 @@ namespace WebApplication1.Controllers
             });
         }
 
+        [Authorize]
+        [HttpPost("google/reset")]
+        public async Task<ActionResult<TokenResetResponse>> TokenReset()
+        {
+            // Wygenerowanie tokenu JWT
+            var token = TokenManager.GenerateJwtToken(_configuration);
 
-
+            return Ok(new TokenResetResponse
+            {
+                Token = token,
+            });
+        }
 
         //GARBAGE ONLY BELOW//
 

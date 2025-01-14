@@ -224,7 +224,7 @@ namespace WebApplication1.Controllers
             HttpResponseMessage response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
 
             if ((int)response.StatusCode != 200)
-                return StatusCode((int)response.StatusCode, response.Content.ReadAsStringAsync());
+                return StatusCode((int)response.StatusCode, "Invalid or expired offer\n" + response.Content.ReadAsStringAsync());
 
             if (!EmailSender.SendRentEmail(_context.GetUserEmailById(data.CustomerId)))
                 return BadRequest("Email didnt sent");
@@ -254,7 +254,9 @@ namespace WebApplication1.Controllers
             HttpResponseMessage response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
 
             if((int)response.StatusCode != 200)
-                return StatusCode((int)response.StatusCode, response.Content.ReadAsStringAsync());
+                return StatusCode((int)response.StatusCode, "Invalid or expired offer\n" + response.Content.ReadAsStringAsync());
+
+
 
             if(!EmailSender.SendRentEmail(_context.GetUserEmailById(data.CustomerId)))
                 return BadRequest("Email didnt sent");

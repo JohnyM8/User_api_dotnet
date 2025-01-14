@@ -177,4 +177,9 @@ namespace WebApplication1.Models
             this.Name = data.Name;
         }
     }
+
+    public class TokenResetResponse
+    {
+        public string? Token { get; set; }
+    }
 }
