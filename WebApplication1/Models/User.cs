@@ -69,7 +69,7 @@ namespace WebApplication1.Models
             this.login = user.login;
             this.password = user.password;
             this.rentalService = user.rentalService;
-            //this.birthday = user.birthday;
+            this.birthday = user.birthday;
             this.driverLicenseReceiveDate = user.driverLicenseReceiveDate;
         }
     }
