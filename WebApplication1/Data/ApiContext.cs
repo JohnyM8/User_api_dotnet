@@ -36,7 +36,7 @@ namespace WebApplication1.Data
         {
             var tmp = Users.Where(user => user.login == login).ToArray();
 
-            if (tmp == null)
+            if (tmp == null || tmp.Count() == 0)
                 return null;
             else
                 return tmp[0];
@@ -46,7 +46,7 @@ namespace WebApplication1.Data
         {
             var tmp = Users.Where(user => user.email == email).ToArray();
 
-            if(tmp == null)
+            if(tmp == null || tmp.Count() == 0)
                 return null;
             else 
                 return tmp[0];

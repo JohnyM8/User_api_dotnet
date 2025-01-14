@@ -159,12 +159,12 @@ namespace WebApplication1.Controllers
         [HttpPost("getOffer")]
         public async Task<ActionResult<RentalOfferFront>> GetOffer([FromBody] OfferRequestFront data)
         {
-            if (_context.FindUserById(data.CustomerId) == null)
+            if (_context.FindUserById(int.Parse(data.CustomerId)) == null)
                 return BadRequest("User with given ID does not exists");
 
             var RentalObj = new OfferRequestDto(data);
 
-            RentalObj.UpdateUserData(new UserDto(_context.FindUserById(data.CustomerId)));
+            RentalObj.UpdateUserData(new UserDto(_context.FindUserById(int.Parse(data.CustomerId))));
 
             var request = new HttpRequestMessage(HttpMethod.Post, forwordURL + "/api/customer/rentals/offers")
             {
@@ -183,12 +183,12 @@ namespace WebApplication1.Controllers
 
             var responseContent = await response.Content.ReadFromJsonAsync<RentalOfferDto>();
 
-            if (!EmailSender.SendOfferEmail(_context.GetUserEmailById(data.CustomerId) , responseContent , RentalObj))
+            if (!EmailSender.SendOfferEmail(_context.GetUserEmailById(int.Parse(data.CustomerId)) , responseContent , RentalObj))
                 return BadRequest("Email wasnt send");
 
             var newOffer = new RentalOfferFront(responseContent);
 
-            newOffer.userId = data.CustomerId;
+            newOffer.userId = int.Parse(data.CustomerId);
 
             return StatusCode((int)response.StatusCode, newOffer);
         }
@@ -223,8 +223,9 @@ namespace WebApplication1.Controllers
 
             HttpResponseMessage response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
 
+
             if ((int)response.StatusCode != 200)
-                return StatusCode((int)response.StatusCode, "Invalid or expired offer\n" + response.Content.ReadAsStringAsync());
+                return StatusCode((int)response.StatusCode, response.Content.ReadAsStringAsync());
 
             if (!EmailSender.SendRentEmail(_context.GetUserEmailById(data.CustomerId)))
                 return BadRequest("Email didnt sent");
@@ -254,10 +255,10 @@ namespace WebApplication1.Controllers
             HttpResponseMessage response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
 
             if((int)response.StatusCode != 200)
-                return StatusCode((int)response.StatusCode, "Invalid or expired offer\n" + response.Content.ReadAsStringAsync());
+                return StatusCode((int)response.StatusCode, response.Content.ReadAsStringAsync());
 
 
-
+             
             if(!EmailSender.SendRentEmail(_context.GetUserEmailById(data.CustomerId)))
                 return BadRequest("Email didnt sent");
 

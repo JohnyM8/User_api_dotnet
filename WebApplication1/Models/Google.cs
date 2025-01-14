@@ -21,7 +21,7 @@ namespace WebApplication1.Models
             _configuration = configuration;
         }
 
-        public string GetJsonString(string code , string redirectUri)
+        public string GetJsonString(string code, string redirectUri)
         {
             return "{" + $" \"code\" : \"{code}\" ," +
                 $"\"client_id\" : \"{_configuration["jsonCopy:GoogleAuth:ClientId"]!}\"," +
@@ -44,9 +44,9 @@ namespace WebApplication1.Models
             //    { "redirect_uri", redirectUri }
             //};
 
-            
-            
-            var jsonRequest = GetJsonString(decode_code , redirectUri);
+
+
+            var jsonRequest = GetJsonString(decode_code, redirectUri);
 
             var response = await _httpClient.PostAsync(
                 "https://oauth2.googleapis.com/token",
@@ -141,10 +141,10 @@ namespace WebApplication1.Models
     public class GoogleAuthRegisterRequest
     {
         public string? Email { get; set; }
-        public string? firstname { get; set; }
+        //public string? firstname { get; set; }
         public string? lastname { get; set; }
         public string? login { get; set; }
-        public string? rentalService { get; set; }
+        //public string? rentalService { get; set; }
         public string? birthday { get; set; }
         public string? driverLicenseReceiveDate { get; set; }
     }
@@ -181,5 +181,10 @@ namespace WebApplication1.Models
     public class TokenResetResponse
     {
         public string? Token { get; set; }
+    }
+
+    public class TMP
+    {
+        public string? Email { get; set; }
     }
 }
