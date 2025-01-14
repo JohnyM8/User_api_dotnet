@@ -26,7 +26,7 @@ namespace WebApplication1.Controllers
     {
         private readonly ApiContext _context;
 
-        static readonly string forwordURL = "https://car-rental-api-chezbchwebfggwcd.canadacentral-01.azurewebsites.net";
+        static readonly string forwordURL = "http://localhost:5001";
         static readonly string forwordURLLocal = "https://localhost:7151";
         private readonly HttpClient _httpClient;
         private string? token = null;
