@@ -164,7 +164,9 @@ namespace WebApplication1.Controllers
             
             if (_context.FindUserById(customerId) == null)
                 return BadRequest("User with given ID does not exists");
-
+            
+            var user = _context.FindUserById(customerId);
+            
             var RentalObj = new OfferRequestDto(data);
 
             //RentalObj.UpdateUserData(new UserDto(_context.FindUserById(customerId)));
