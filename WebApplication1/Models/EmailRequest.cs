@@ -4,6 +4,7 @@ using MailKit.Net.Smtp;
 //using System.Net.Mail;
 using Microsoft.VisualStudio.Web.CodeGenerators.Mvc.Templates.BlazorIdentity.Pages.Manage;
 using System.IO;
+using System;
 //using System.Net;
 
 namespace WebApplication1.Models
@@ -23,6 +24,21 @@ namespace WebApplication1.Models
     }
     public static class EmailSender
     {
+        public static bool SendReturnEndEmail(string email , ReturnConfReq data)
+        {
+            var emailR = new EmailRequest()
+            {
+                To = email,
+                Subject = "Your return has been accepted!\n",
+                Body = new TextPart("plain")
+                {
+                    Text = 
+                    $"Employee notes: {data.EmployeeNotes}\n" +
+                    $"Date of return: {data.ReturnDate}"
+                },
+            };
+            return SendEmail(emailR);
+        }
         public static bool SendReturnStartEmail(string email)
         {
             var emailR = new EmailRequest()
@@ -132,14 +148,14 @@ namespace WebApplication1.Models
             //stream.Close();
             //File.Delete(path);
 
-            bool response = SendEmail(emailR, path);
+            bool response = SendEmail(emailR);
 
             stream.Close();
             File.Delete(path);
 
             return response;
         }
-        public static bool SendEmail(EmailRequest emailRequest , string filePath = "")
+        public static bool SendEmail(EmailRequest emailRequest)
         {
             if (string.IsNullOrEmpty(emailRequest.To) || string.IsNullOrEmpty(emailRequest.Subject))
             {

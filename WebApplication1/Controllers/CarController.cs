@@ -572,6 +572,16 @@ namespace WebApplication1.Controllers
         }
 
 
+        [HttpPost("return/confirmation")]
+        public async Task<ActionResult<string>> ConfReturn([FromBody] ReturnConfReq data)
+        {
+            if (!EmailSender.SendReturnEndEmail(_context.GetUserEmailById(data.UserId) , data))
+                return BadRequest("Email didnt sent");
+
+            return Ok();
+        }
+
+
 
 
         //GARBAGE ONLY BELOW//
