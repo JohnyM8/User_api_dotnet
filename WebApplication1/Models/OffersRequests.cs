@@ -15,8 +15,8 @@
         public OfferRequestDto() { }
         public OfferRequestDto(OfferRequestFront data)
         {
-            CarId = data.CarId;
-            CustomerId = data.CustomerId;
+            CarId = int.Parse(data.CarId);
+            CustomerId = int.Parse(data.CustomerId);
             PlannedStartDate = DateTime.Parse(data.PlannedStartDate);
             PlannedEndDate = DateTime.Parse(data.PlannedEndDate);
         }
@@ -32,8 +32,8 @@
     }
     public class OfferRequestFront
     {
-        public int CarId { get; set; }
-        public int CustomerId { get; set; }
+        public string CarId { get; set; }
+        public string CustomerId { get; set; }
         public string PlannedStartDate { get; set; }
         public string PlannedEndDate { get; set; }
     }

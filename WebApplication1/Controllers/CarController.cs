@@ -158,13 +158,21 @@ namespace WebApplication1.Controllers
         [Authorize]
         [HttpPost("getOffer")]
         public async Task<ActionResult<RentalOfferFront>> GetOffer([FromBody] OfferRequestFront data)
-        {
-            if (_context.FindUserById(data.CustomerId) == null)
+        {   
+            var customerId = int.Parse(data.CustomerId);
+            var carId = int.Parse(data.CarId);
+            
+            if (_context.FindUserById(customerId) == null)
                 return BadRequest("User with given ID does not exists");
 
             var RentalObj = new OfferRequestDto(data);
 
-            RentalObj.UpdateUserData(new UserDto(_context.FindUserById(data.CustomerId)));
+            //RentalObj.UpdateUserData(new UserDto(_context.FindUserById(customerId)));
+            RentalObj.UpdateUserData(new UserDto(
+                    new User(
+                        
+                        )
+                ));
 
             var request = new HttpRequestMessage(HttpMethod.Post, forwordURL + "/api/customer/rentals/offers")
             {
@@ -183,12 +191,12 @@ namespace WebApplication1.Controllers
 
             var responseContent = await response.Content.ReadFromJsonAsync<RentalOfferDto>();
 
-            if (!EmailSender.SendOfferEmail(_context.GetUserEmailById(data.CustomerId) , responseContent , RentalObj))
+            if (!EmailSender.SendOfferEmail(_context.GetUserEmailById(customerId) , responseContent , RentalObj))
                 return BadRequest("Email wasnt send");
 
             var newOffer = new RentalOfferFront(responseContent);
 
-            newOffer.userId = data.CustomerId;
+            newOffer.userId = customerId;
 
             return StatusCode((int)response.StatusCode, newOffer);
         }

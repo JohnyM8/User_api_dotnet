@@ -50,7 +50,11 @@ namespace WebApplication1.Controllers
 
             // Utworzenie/znalezienie użytkownika
             var user = _context.FindByEmail(googleUserInfo.Email!);
-
+            
+            // FRONTEND NEED USER ID!
+            if (user != null)
+                googleUserInfo.Sub = user.id.ToString();
+            
             // Wygenerowanie tokenu JWT
             var token = TokenManager.GenerateJwtToken(_configuration);
 
