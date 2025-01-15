@@ -6,8 +6,8 @@ namespace WebApplication1.Models
     public class Car
     {
         [Key]
-        public int id { get; set; }
-        public string? rentalService = "My";
+        public string id { get; set; }
+        public string? rentalService { get; set; }
         public string? producer { get; set; }
         public string? model { get; set; }
         public string? type { get; set; }
@@ -23,7 +23,7 @@ namespace WebApplication1.Models
 
         public Car(CarDtoNew data)
         {
-            id = data.Id;
+            id = $"{data.Id}";
             //rentalService = data.rentalService;
             producer = data.Producer;
             model = data.Model;
@@ -39,8 +39,8 @@ namespace WebApplication1.Models
 
         public Car(CarDto data)
         {
-            id = data.id;
-            //rentalService = data.rentalService;
+            id = $"{data.id}";
+            rentalService = Constants.RentalName;
             producer = data.producer;
             model = data.model;
             location = data.location;
@@ -51,6 +51,23 @@ namespace WebApplication1.Models
                 IsAvailable = 1;
             else
                 IsAvailable = 0;
+        }
+
+        public Car(CarDto2 data)
+        {
+            id = data.Vin;
+            rentalService = Constants.RentalName2;
+            producer = data.Brand;
+            model = data.Model;
+            location = data.Localization;
+            yearOfProduction = $"{data.YearOfProduction}";
+            numberOfSeats = 5;
+            type = data.Type;
+            IsAvailable = 1;
+            //if (data.isAvailable)
+            //    IsAvailable = 1;
+            //else
+            //    IsAvailable = 0;
         }
 
     }
@@ -71,7 +88,7 @@ namespace WebApplication1.Models
 
         public CarDtoNew(Car data)
         {
-            Id = data.id;
+            Id = int.Parse(data.id);
             //rentalService = data.rentalService;
             Producer = data.producer;
             Model = data.model;
@@ -102,7 +119,7 @@ namespace WebApplication1.Models
 
         public CarDto(Car data)
         {
-            id = data.id;
+            id = int.Parse(data.id);
             //rentalService = data.rentalService;
             producer = data.producer;
             model = data.model;
@@ -114,5 +131,23 @@ namespace WebApplication1.Models
             else
                 isAvailable = true;
         }
+    }
+
+    public class CarDto2
+    {
+        public string Brand { get; set; } = string.Empty;
+        public string Model { get; set; } = string.Empty;
+        public int YearOfProduction { get; set; }
+        public string Type { get; set; } = string.Empty;
+        public float Price { get; set; }
+        public string DriveType { get; set; } = string.Empty;
+        public string Transmission { get; set; } = string.Empty;
+        public string Description { get; set; } = string.Empty;
+        public int Rate { get; set; }
+        public string Localization { get; set; } = string.Empty;
+        public string SerialNo { get; set; } = string.Empty;
+        public string Vin { get; set; } = string.Empty;
+        public string RegistryNo { get; set; } = string.Empty;
+        public string PhotoUrl { get; set; } = string.Empty;
     }
 }

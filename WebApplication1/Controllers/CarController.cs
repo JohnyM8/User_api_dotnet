@@ -27,6 +27,7 @@ namespace WebApplication1.Controllers
         private readonly ApiContext _context;
 
         static readonly string forwordURL = "https://car-rental-api-chezbchwebfggwcd.canadacentral-01.azurewebsites.net";
+        static readonly string forwordURL2 = "https://rentalapi-esauh2huedhcc2a6.polandcentral-01.azurewebsites.net";
         static readonly string forwordURLLocal = "https://localhost:7151";
         private readonly HttpClient _httpClient;
         private string? token = null;
@@ -76,7 +77,28 @@ namespace WebApplication1.Controllers
             return Ok(token);
         }
 
-        public async Task<HttpResponseMessage> GetAllAvCars()
+
+
+        public async Task<(IEnumerable<Car>? cars, int statusCode, string? resault)> GetCarsRen2()
+        {
+            var request = new HttpRequestMessage(HttpMethod.Get, forwordURL2 + "/api/Vehicle");
+
+            HttpResponseMessage response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
+
+            if ((int)response.StatusCode != 200)
+                return (null , (int)response.StatusCode, await response.Content.ReadAsStringAsync());
+
+            var responseContent = await response.Content.ReadFromJsonAsync<IEnumerable<CarDto2>>();
+
+            if (responseContent == null)
+                return (null , NotFound().StatusCode , "Cars not found");
+
+            var newResponse = responseContent.ConvertToCar();
+
+            return (newResponse, Ok().StatusCode, null);
+        }
+
+        public async Task<(IEnumerable<Car>? cars, int statusCode, string? resault)> GetCarsRen1()
         {
             var request = new HttpRequestMessage(HttpMethod.Get, forwordURL + "/api/customer/cars");
 
@@ -84,43 +106,57 @@ namespace WebApplication1.Controllers
 
             HttpResponseMessage response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
 
-            return response;
+            if ((int)response.StatusCode != 200)
+                return (null, (int)response.StatusCode, await response.Content.ReadAsStringAsync());
+
+            var responseContent = await response.Content.ReadFromJsonAsync<IEnumerable<CarDto>>();
+
+            if (responseContent == null)
+                return (null, NotFound().StatusCode, "Cars not found");
+
+            var newResponse = responseContent.ConvertToCar();
+
+            return (newResponse, Ok().StatusCode, null);
         }
+
+        public async Task<(IEnumerable<Car>? cars, int statusCode, string? resault)> GetAllCars()
+        {
+            var responce1 = await GetCarsRen1();
+
+            if (responce1.statusCode != 200 || responce1.cars == null)
+                return (null , responce1.statusCode, responce1.resault);
+
+            var responce2 = await GetCarsRen2();
+
+            if (responce2.statusCode != 200 || responce2.cars == null)
+                return (null , responce2.statusCode, responce2.resault);
+
+            return (responce1.cars.Concat(responce2.cars) , Ok().StatusCode , null);
+        }
+
 
         [HttpGet("getAllAvailable")]
         public async Task<ActionResult<IEnumerable<Car>>> GetAllAvailableCars()
         {
 
-            HttpResponseMessage response = await GetAllAvCars();
+            var responce = await GetAllCars();
 
-            if ((int)response.StatusCode != 200)
-                return StatusCode((int)response.StatusCode, null);
+            if (responce.statusCode != 200 || responce.cars == null)
+                return StatusCode(responce.statusCode , responce.resault);
 
-            var responseContent = await response.Content.ReadFromJsonAsync<IEnumerable<CarDto>>();
-
-            if(responseContent == null)
-                return NotFound();
-
-            var newResponse = responseContent.ConvertToCar();
-
-            return Ok(newResponse);
+            return Ok(responce.cars);
         }
 
         [HttpPost("getPage")]
         public async Task<ActionResult<IEnumerable<Car>>> GetPage([FromBody] PageRequest data)
         {
 
-            HttpResponseMessage response = await GetAllAvCars();
+            var responce = await GetAllCars();
 
-            var responseContent = await response.Content.ReadFromJsonAsync<IEnumerable<CarDto>>();
+            if (responce.statusCode != 200 || responce.cars == null)
+                return StatusCode(responce.statusCode, responce.resault);
 
-            if (responseContent == null)
-                return NotFound();
-
-            var CarList = responseContent.ConvertToCar();
-
-            if (CarList == null)
-                return NotFound("List not found");
+            var CarList = responce.cars;    
 
             var res = CarList.GetPage(data.Page);
 
@@ -134,14 +170,12 @@ namespace WebApplication1.Controllers
         [HttpGet("getCountPages")]
         public async Task<ActionResult<int>> GetCountPage()
         {
-            HttpResponseMessage response = await GetAllAvCars();
+            var responce = await GetAllCars();
 
-            var responseContent = await response.Content.ReadFromJsonAsync<IEnumerable<CarDto>>();
+            if (responce.statusCode != 200 || responce.cars == null)
+                return StatusCode(responce.statusCode, responce.resault);
 
-            if (responseContent == null)
-                return NotFound();
-
-            var CarList = responseContent.ConvertToCar();
+            var CarList = responce.cars;
 
             int pages = CarList.CountPages();
 
@@ -152,13 +186,9 @@ namespace WebApplication1.Controllers
             return Ok(pages);
         }
 
-        [Authorize]
-        [HttpPost("getOffer")]
-        public async Task<ActionResult<RentalOfferFront>> GetOffer([FromBody] OfferRequestFront data)
-        {
-            if (_context.FindUserById(int.Parse(data.CustomerId)) == null)
-                return BadRequest("User with given ID does not exists");
 
+        public async Task<(RentalOfferFront? content, int statusCode, string? resault)> GetOfferRent1(OfferRequestFront data)
+        {
             var RentalObj = new OfferRequestDto(data);
 
             RentalObj.UpdateUserData(new UserDto(_context.FindUserById(int.Parse(data.CustomerId))));
@@ -176,18 +206,93 @@ namespace WebApplication1.Controllers
             HttpResponseMessage response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
 
             if ((int)response.StatusCode != 200)
-                return StatusCode((int)response.StatusCode, response.Content.ReadAsStringAsync());
+                return (null , (int)response.StatusCode, await response.Content.ReadAsStringAsync());
 
             var responseContent = await response.Content.ReadFromJsonAsync<RentalOfferDto>();
 
-            if (!EmailSender.SendOfferEmail(_context.GetUserEmailById(int.Parse(data.CustomerId)) , responseContent , RentalObj))
-                return BadRequest("Email wasnt send");
+            if (!EmailSender.SendOfferEmail(_context.GetUserEmailById(int.Parse(data.CustomerId)), responseContent, RentalObj))
+                return (null , BadRequest().StatusCode , "Email wasnt send");
 
             var newOffer = new RentalOfferFront(responseContent);
 
             newOffer.userId = int.Parse(data.CustomerId);
 
-            return StatusCode((int)response.StatusCode, newOffer);
+            return (newOffer , Ok().StatusCode , null);
+        }
+
+        public async Task<(RentalOfferFront? content, int statusCode, string? resault)> GetOfferRent2(OfferRequestFront data)
+        {
+            var RentalObj = new OfferRequestDto(data);
+
+            var request = new HttpRequestMessage(HttpMethod.Post, forwordURL2 + $"/api/Vehicle/available?" +
+                $"start={RentalObj.PlannedStartDate.Year}-{RentalObj.PlannedStartDate.Month}-{RentalObj.PlannedStartDate.Day}" +
+                $"&end={RentalObj.PlannedEndDate.Year}-{RentalObj.PlannedEndDate.Month}-{RentalObj.PlannedEndDate.Day}");
+
+            HttpResponseMessage response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
+
+            if ((int)response.StatusCode != 200)
+                return (null, (int)response.StatusCode, await response.Content.ReadAsStringAsync());
+
+            var responseContent = await response.Content.ReadFromJsonAsync<IEnumerable<CarDto2>>();
+
+            if (responseContent == null || responseContent.ConvertToCar().FindCarById(data.CarId) == null)
+                return (null, NotFound().StatusCode, "Car not found");
+
+            return (null , NotFound().StatusCode , "Work in progress");
+        }
+
+        [Authorize]
+        [HttpPost("getOffer")]
+        public async Task<ActionResult<RentalOfferFront>> GetOffer([FromBody] OfferRequestFront data)
+        {
+            if (_context.FindUserById(int.Parse(data.CustomerId)) == null)
+                return BadRequest("User with given ID does not exists");
+
+            if (data.RentalName == Constants.RentalName)
+            {
+                var responce1 = await GetOfferRent1(data);
+
+                if (responce1.statusCode != 200 || responce1.content == null)
+                    return StatusCode(responce1.statusCode, responce1.resault);
+
+                return Ok(responce1.content);
+            }
+
+            else if (data.RentalName == Constants.RentalName2)
+            {
+                var responce1 = await GetOfferRent2(data);
+
+                if (responce1.statusCode != 200 || responce1.content == null)
+                    return StatusCode(responce1.statusCode, responce1.resault);
+
+                return Ok(responce1.content);
+            }
+            else
+                return BadRequest("Wrong rental name");
+
+            //var RespCars1 = await GetCarsRen1();
+
+                //if (RespCars1.statusCode != 200 || RespCars1.cars == null)
+                //    return StatusCode(RespCars1.statusCode, RespCars1.resault);
+
+                //var RespCars2 = await GetCarsRen2();
+
+                //if (RespCars2.statusCode != 200 || RespCars2.cars == null)
+                //    return StatusCode(RespCars2.statusCode, RespCars2.resault);
+
+                //if (RespCars1.cars.FindCarById(data.CarId) != null)
+                //{
+                //    var responce1 = await GetOfferRent1(data);
+
+                //    if (responce1.statusCode != 200 || responce1.content == null)
+                //        return StatusCode(responce1.statusCode, responce1.resault);
+
+                //    return Ok(responce1.content);
+                //}
+                //else if(RespCars2.cars.FindCarById(data.CarId) != null)
+                //{
+
+                //}
         }
 
         [HttpGet("rentlink/{Offerid}/{Userid}/{PlannedStartDate}/{PlannedEndDate}")]
@@ -294,7 +399,7 @@ namespace WebApplication1.Controllers
         }
 
         [HttpPost("rentedCars")]
-        public async Task<ActionResult<IEnumerable<Car>>> GetRentedCars([FromBody] RentedCarsRequest data)
+        public async Task<ActionResult<IEnumerable<RentalToFront>>> GetRentedCars([FromBody] RentedCarsRequest data)
         {
             if (_context.FindUserById(int.Parse(data.UserId)) == null)
                 return BadRequest("User with given ID does not exists");
@@ -390,24 +495,19 @@ namespace WebApplication1.Controllers
 
             var newCar = new Car(DtoCar);
 
-            return StatusCode((int)response.StatusCode, newCar);
+            return Ok(newCar);
         }
 
 
         [HttpGet("distinctBrands")]
         public async Task<ActionResult<IEnumerable<string>>> GetDistinctBrands()
         {
-            HttpResponseMessage response = await GetAllAvCars();
+            var responce = await GetAllCars();
 
-            if ((int)response.StatusCode != 200)
-                return StatusCode((int)response.StatusCode, response.Content.ReadAsStringAsync());
+            if (responce.statusCode != 200 || responce.cars == null)
+                return StatusCode(responce.statusCode, responce.resault);
 
-            var responseContent = await response.Content.ReadFromJsonAsync<IEnumerable<CarDto>>();
-
-            if (responseContent == null)
-                return NotFound();
-
-            var AllCars = responseContent.ConvertToCar();
+            var AllCars = responce.cars;
 
             var brands = AllCars
                 .AsQueryable()
@@ -420,17 +520,12 @@ namespace WebApplication1.Controllers
         [HttpGet("modelsByBrand/{producer}")]
         public async Task<ActionResult<IEnumerable<string>>> GetModelsByBrand(string producer)
         {
-            HttpResponseMessage response = await GetAllAvCars();
+            var responce = await GetAllCars();
 
-            if ((int)response.StatusCode != 200)
-                return StatusCode((int)response.StatusCode, response.Content.ReadAsStringAsync());
+            if (responce.statusCode != 200 || responce.cars == null)
+                return StatusCode(responce.statusCode, responce.resault);
 
-            var responseContent = await response.Content.ReadFromJsonAsync<IEnumerable<CarDto>>();
-
-            if (responseContent == null)
-                return NotFound();
-
-            var AllCars = responseContent.ConvertToCar();
+            var AllCars = responce.cars;
 
             var models = AllCars
                 .Where(car => car.producer == producer)
@@ -443,17 +538,12 @@ namespace WebApplication1.Controllers
         [HttpGet("distinctYears")]
         public async Task<ActionResult<IEnumerable<string>>> GetDistinctYears()
         {
-            HttpResponseMessage response = await GetAllAvCars();
+            var responce = await GetAllCars();
 
-            if ((int)response.StatusCode != 200)
-                return StatusCode((int)response.StatusCode, response.Content.ReadAsStringAsync());
+            if (responce.statusCode != 200 || responce.cars == null)
+                return StatusCode(responce.statusCode, responce.resault);
 
-            var responseContent = await response.Content.ReadFromJsonAsync<IEnumerable<CarDto>>();
-
-            if (responseContent == null)
-                return NotFound();
-
-            var AllCars = responseContent.ConvertToCar();
+            var AllCars = responce.cars;
 
             var years = AllCars
                 .Select(car => car.yearOfProduction)
@@ -466,17 +556,12 @@ namespace WebApplication1.Controllers
         [HttpGet("distinctTypes")]
         public async Task<ActionResult<IEnumerable<string>>> GetDistinctTypes()
         {
-            HttpResponseMessage response = await GetAllAvCars();
+            var responce = await GetAllCars();
 
-            if ((int)response.StatusCode != 200)
-                return StatusCode((int)response.StatusCode, response.Content.ReadAsStringAsync());
+            if (responce.statusCode != 200 || responce.cars == null)
+                return StatusCode(responce.statusCode, responce.resault);
 
-            var responseContent = await response.Content.ReadFromJsonAsync<IEnumerable<CarDto>>();
-
-            if (responseContent == null)
-                return NotFound();
-
-            var AllCars = responseContent.ConvertToCar();
+            var AllCars = responce.cars;
 
             var types = AllCars
                 .Select(car => car.type)
@@ -488,17 +573,12 @@ namespace WebApplication1.Controllers
         [HttpGet("distinctLocations")]
         public async Task<ActionResult<IEnumerable<string>>> GetDistinctLocations()
         {
-            HttpResponseMessage response = await GetAllAvCars();
+            var responce = await GetAllCars();
 
-            if ((int)response.StatusCode != 200)
-                return StatusCode((int)response.StatusCode, response.Content.ReadFromJsonAsync<string>());
+            if (responce.statusCode != 200 || responce.cars == null)
+                return StatusCode(responce.statusCode, responce.resault);
 
-            var responseContent = await response.Content.ReadFromJsonAsync<IEnumerable<CarDto>>();
-
-            if (responseContent == null)
-                return NotFound();
-
-            var AllCars = responseContent.ConvertToCar();
+            var AllCars = responce.cars;
 
             var locations = AllCars
                 .Select(car => car.location)
@@ -518,17 +598,12 @@ namespace WebApplication1.Controllers
         {
             try
             {
-                HttpResponseMessage response = await GetAllAvCars();
+                var responce = await GetAllCars();
 
-                if ((int)response.StatusCode != 200)
-                    return StatusCode((int)response.StatusCode, response.Content.ReadFromJsonAsync<string>());
+                if (responce.statusCode != 200 || responce.cars == null)
+                    return StatusCode(responce.statusCode, responce.resault);
 
-                var responseContent = await response.Content.ReadFromJsonAsync<IEnumerable<CarDto>>();
-
-                if (responseContent == null)
-                    return NotFound();
-
-                var AllCars = responseContent.ConvertToCar();
+                var AllCars = responce.cars;
 
                 var filteredCars = AllCars.AsQueryable();
 
@@ -582,7 +657,98 @@ namespace WebApplication1.Controllers
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
         //GARBAGE ONLY BELOW//
+
+
+
+
+
+        public async Task<HttpResponseMessage> GetAllAvCars2()
+        {
+            var request = new HttpRequestMessage(HttpMethod.Get, forwordURL2 + "/api/Vehicle");
+
+            HttpResponseMessage response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
+
+            return response;
+        }
+
+
+        public async Task<HttpResponseMessage> GetAllAvCars()
+        {
+            var request = new HttpRequestMessage(HttpMethod.Get, forwordURL + "/api/customer/cars");
+
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+            HttpResponseMessage response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
+
+            return response;
+        }
+
+        [HttpGet("getAllAvailable2")]
+        public async Task<ActionResult<IEnumerable<Car>>> GetAllAvailableCars2()
+        {
+            HttpResponseMessage response2 = await GetAllAvCars2();
+
+            if ((int)response2.StatusCode != 200)
+                return StatusCode((int)response2.StatusCode, response2.Content.ReadAsStringAsync());
+
+            var responseContent2 = await response2.Content.ReadFromJsonAsync<IEnumerable<CarDto2>>();
+
+            if (responseContent2 == null)
+                return NotFound();
+
+            var newResponse2 = responseContent2.ConvertToCar();
+
+            return Ok(newResponse2);
+        }
+
+
+
+
+        [HttpGet("getAllAvailableOLD")]
+        public async Task<ActionResult<IEnumerable<Car>>> GetAllAvailableCarsOLD()
+        {
+
+            HttpResponseMessage response = await GetAllAvCars();
+
+            if ((int)response.StatusCode != 200)
+                return StatusCode((int)response.StatusCode, response.Content.ReadAsStringAsync());
+
+            var responseContent = await response.Content.ReadFromJsonAsync<IEnumerable<CarDto>>();
+
+            if (responseContent == null)
+                return NotFound();
+
+            var newResponse = responseContent.ConvertToCar();
+
+            HttpResponseMessage response2 = await GetAllAvCars2();
+
+            if ((int)response2.StatusCode != 200)
+                return StatusCode((int)response2.StatusCode, response2.Content.ReadAsStringAsync());
+
+            var responseContent2 = await response2.Content.ReadFromJsonAsync<IEnumerable<CarDto2>>();
+
+            if (responseContent2 == null)
+                return NotFound();
+
+            var newResponse2 = responseContent2.ConvertToCar();
+
+            return Ok(newResponse.Concat(newResponse2));
+        }
+
+
 
         [HttpPost("rentlink")]
         public async Task<ActionResult<string>> GetRentTest([FromBody] RentalRequestFront data)

@@ -50,7 +50,7 @@ namespace WebApplication1.Models
             startDate = data.StartDate.ToShortDateString();
             endDate = data.EndDate.ToShortDateString();
             totalPrice = data.TotalPrice;
-            status = data.Status.ToString();
+            status = data.Status;
             startLocation = data.StartLocation;
             endLocation = data.EndLocation;
         }

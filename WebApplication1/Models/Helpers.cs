@@ -5,6 +5,8 @@ namespace WebApplication1.Models
     public static class Constants
     {
         public const string RentalName = "JEJ Car Rental";
+
+        public const string RentalName2 = "Some name";
     }
     public static class CarListExtensions
     {
@@ -61,6 +63,30 @@ namespace WebApplication1.Models
             }
 
             return newList;
+        }
+
+        public static IEnumerable<Car> ConvertToCar(this IEnumerable<CarDto2> list)
+        {
+            var newList = new List<Car>();
+
+            foreach (var item in list)
+            {
+                newList.Add(new Car(item));
+            }
+
+            return newList;
+        }
+
+        public static Car? FindCarById(this IEnumerable<Car> list , string Id)
+        {
+            var newList = new List<Car>();
+
+            var tmp = newList.Where(car => car.id == Id).ToArray();
+
+            if (tmp == null || tmp.Count() == 0)
+                return null;
+            else
+                return tmp[0];
         }
     }
 }

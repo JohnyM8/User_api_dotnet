@@ -33,6 +33,7 @@
     public class OfferRequestFront
     {
         public string CarId { get; set; }
+        public string RentalName { get; set; }
         public string CustomerId { get; set; }
         public string PlannedStartDate { get; set; }
         public string PlannedEndDate { get; set; }
