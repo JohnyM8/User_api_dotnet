@@ -109,7 +109,7 @@ namespace WebApplication1.Models
         public string? model { get; set; }
         public int yearOfProduction { get; set; }
         public int numberOfSeats { get; set; }
-        public int type { get; set; }
+        public CarType type { get; set; }
         public bool isAvailable { get; set; }
         public string? location { get; set; }
         

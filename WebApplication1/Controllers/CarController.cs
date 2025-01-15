@@ -300,8 +300,8 @@ namespace WebApplication1.Controllers
         {
             RentalRequestFront data = new RentalRequestFront() 
             {
-                OfferId = "${Offerid}",
-                CustomerId = "${Userid}",
+                OfferId = $"{Offerid}",
+                CustomerId = $"{Userid}",
                 PlannedStartDate = PlannedStartDate,
                 PlannedEndDate = PlannedEndDate
             };
@@ -332,7 +332,7 @@ namespace WebApplication1.Controllers
             if (!EmailSender.SendRentEmail(_context.GetUserEmailById(int.Parse(data.CustomerId))))
                 return BadRequest("Email didnt sent");
 
-            return StatusCode((int)response.StatusCode, "Rental succesful!\n");
+            return Ok("Rental succesful!\n");
         }
 
         [Authorize]
@@ -359,14 +359,14 @@ namespace WebApplication1.Controllers
             if((int)response.StatusCode != 200)
                 return StatusCode((int)response.StatusCode, response.Content.ReadAsStringAsync());
 
-
+            
              
             if(!EmailSender.SendRentEmail(_context.GetUserEmailById(int.Parse(data.CustomerId))))
                 return BadRequest("Email didnt sent");
 
             var responseContent = await response.Content.ReadFromJsonAsync<RentalDto>();
 
-            return StatusCode((int)response.StatusCode, new RentalToFront(responseContent));
+            return Ok(new RentalToFront(responseContent));
         }
 
         [Authorize]
@@ -433,14 +433,14 @@ namespace WebApplication1.Controllers
 
             foreach (var item in responseContent)
             {
-                var Car = await GetCar(item.CarId);
+                var Car = await GetCar(item.carId);
 
-                if (Car == null)
+                if (Car.car == null)
                     return NotFound("Techical problems: Car with that id was not found");
 
                 var tmp = new RentalToFront(item);
 
-                tmp.Car = Car;
+                tmp.Car = Car.car;
 
                 RentalsList.Add(tmp);
             }
@@ -448,7 +448,7 @@ namespace WebApplication1.Controllers
             return Ok(RentalsList);
         }
 
-        public async Task<Car> GetCar(int Id)
+        public async Task<(Car? car, int statusCode , string? content)> GetCar(int Id)
         {
             var request = new HttpRequestMessage(HttpMethod.Get, forwordURL + $"/api/customer/cars/{Id}");
 
@@ -456,18 +456,17 @@ namespace WebApplication1.Controllers
 
             HttpResponseMessage response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
 
-            //var responseContent = await response.Content.ReadFromJsonAsync<CarDto>();
+            if ((int)response.StatusCode != 200)
+                return (null , (int)response.StatusCode, await response.Content.ReadAsStringAsync());
 
-            var responseContent = await response.Content.ReadAsStringAsync();
+            var responseContent = await response.Content.ReadFromJsonAsync<CarDto>();
 
             if (responseContent == null)
-                return null;
+                return (null , NotFound().StatusCode , "Car not found");
 
-            var DtoCar = JsonConvert.DeserializeObject<CarDto>(responseContent);
+            var newCar = new Car(responseContent);
 
-            var newCar = new Car(DtoCar);
-
-            return newCar;
+            return (newCar , Ok().StatusCode , null);
         }
 
         // GET: api/Users/5
