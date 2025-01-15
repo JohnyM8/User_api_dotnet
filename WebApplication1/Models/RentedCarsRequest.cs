@@ -4,7 +4,7 @@ namespace WebApplication1.Models
 {
     public class RentedCarsRequest
     {
-        public int UserId { get; set; }
+        public string UserId { get; set; }
     }
 
     public class RentedCarsRequestDto
@@ -16,7 +16,7 @@ namespace WebApplication1.Models
 
         public RentedCarsRequestDto(RentedCarsRequest data)
         {
-            CustomerId = data.UserId;
+            CustomerId = int.Parse(data.UserId);
         }
     }
 }

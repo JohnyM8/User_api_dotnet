@@ -70,7 +70,6 @@ namespace WebApplication1.Controllers
         [HttpGet("getToken")]
         public async Task<ActionResult<string>> GetTokenEndPoint()
         {
-
             Task<string> task = Task<string>.Run(async () => await GetToken());
             token = task.Result;
 
@@ -135,8 +134,6 @@ namespace WebApplication1.Controllers
         [HttpGet("getCountPages")]
         public async Task<ActionResult<int>> GetCountPage()
         {
-
-
             HttpResponseMessage response = await GetAllAvCars();
 
             var responseContent = await response.Content.ReadFromJsonAsync<IEnumerable<CarDto>>();
@@ -198,8 +195,8 @@ namespace WebApplication1.Controllers
         {
             RentalRequestFront data = new RentalRequestFront() 
             {
-                OfferId = Offerid,
-                CustomerId = Userid,
+                OfferId = "${Offerid}",
+                CustomerId = "${Userid}",
                 PlannedStartDate = PlannedStartDate,
                 PlannedEndDate = PlannedEndDate
             };
@@ -227,17 +224,17 @@ namespace WebApplication1.Controllers
             if ((int)response.StatusCode != 200)
                 return StatusCode((int)response.StatusCode, response.Content.ReadAsStringAsync());
 
-            if (!EmailSender.SendRentEmail(_context.GetUserEmailById(data.CustomerId)))
+            if (!EmailSender.SendRentEmail(_context.GetUserEmailById(int.Parse(data.CustomerId))))
                 return BadRequest("Email didnt sent");
 
             return StatusCode((int)response.StatusCode, "Rental succesful!\n");
         }
 
-        //[Authorize]
+        [Authorize]
         [HttpPost("rent")]
         public async Task<ActionResult<RentalToFront>> GetRent([FromBody] RentalRequestFront data)
         {
-            if (_context.FindUserById(data.CustomerId) == null)
+            if (_context.FindUserById(int.Parse(data.CustomerId)) == null)
                 return BadRequest("User with given ID does not exists");
 
             var RentalObj = new RentalRequestDto(data);
@@ -259,7 +256,7 @@ namespace WebApplication1.Controllers
 
 
              
-            if(!EmailSender.SendRentEmail(_context.GetUserEmailById(data.CustomerId)))
+            if(!EmailSender.SendRentEmail(_context.GetUserEmailById(int.Parse(data.CustomerId))))
                 return BadRequest("Email didnt sent");
 
             var responseContent = await response.Content.ReadFromJsonAsync<RentalDto>();
@@ -288,7 +285,7 @@ namespace WebApplication1.Controllers
             if ((int)response.StatusCode != 200)
                 return StatusCode((int)response.StatusCode, response.Content.ReadAsStringAsync());
 
-            if (!EmailSender.SendReturnStartEmail(_context.GetUserEmailById(data.UserId)))
+            if (!EmailSender.SendReturnStartEmail(_context.GetUserEmailById(int.Parse(data.UserId))))
                 return BadRequest("Email didnt sent");
 
             var responseContent = await response.Content.ReadFromJsonAsync<ReturnRecordDto>();
@@ -299,7 +296,7 @@ namespace WebApplication1.Controllers
         [HttpPost("rentedCars")]
         public async Task<ActionResult<IEnumerable<Car>>> GetRentedCars([FromBody] RentedCarsRequest data)
         {
-            if (_context.FindUserById(data.UserId) == null)
+            if (_context.FindUserById(int.Parse(data.UserId)) == null)
                 return BadRequest("User with given ID does not exists");
 
             var RequestObj = new RentedCarsRequestDto(data);

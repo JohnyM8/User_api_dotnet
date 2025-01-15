@@ -6,14 +6,14 @@
 
         public ReturnRequestDto(ReturnRequestFront data)
         {
-            RentalId = data.RentalId;
+            RentalId = int.Parse(data.RentalId);
         }
     }
     public class ReturnRequestFront
     {
         // public int Id { get; set; }
-        public int UserId { get; set; }
-        public int RentalId { get; set; }
+        public string UserId { get; set; }
+        public string RentalId { get; set; }
     }
 
     public class ReturnRecordDto

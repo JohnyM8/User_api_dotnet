@@ -13,8 +13,8 @@ namespace WebApplication1.Models
 
         public RentalRequestDto(RentalRequestFront data)
         {
-            OfferId = data.OfferId;
-            CustomerId = data.CustomerId;
+            OfferId = int.Parse(data.OfferId);
+            CustomerId = int.Parse(data.CustomerId);
             //RentalName = "My";
             RentalName = Constants.RentalName;
             PlannedStartDate = DateTime.Parse(data.PlannedStartDate);
@@ -23,8 +23,8 @@ namespace WebApplication1.Models
     }
     public class RentalRequestFront
     {
-        public int OfferId { get; set; } // Moje id
-        public int CustomerId { get; set; } // External id
+        public string OfferId { get; set; } // Moje id
+        public string CustomerId { get; set; } // External id
 
         //public string RentalName { get; set; }
         public string PlannedStartDate { get; set; }

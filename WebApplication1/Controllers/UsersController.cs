@@ -96,6 +96,7 @@ namespace WebApplication1.Controllers
                 return BadRequest("This user have all data");
 
 
+
             user.login = request.login;
             user.password = "";
             user.lastname = request.lastname;
