@@ -235,10 +235,30 @@ namespace WebApplication1.Controllers
 
             var responseContent = await response.Content.ReadFromJsonAsync<IEnumerable<CarDto2>>();
 
-            if (responseContent == null || responseContent.ConvertToCar().FindCarById(data.CarId) == null)
+            if (responseContent == null)
                 return (null, NotFound().StatusCode, "Car not found");
 
-            return (null , NotFound().StatusCode , "Work in progress");
+            var car = responseContent.ConvertToCar().FindCarById(data.CarId);
+
+            if(car == null)
+                return(null, NotFound().StatusCode, "Car not found");
+
+            var user = _context.FindUserById(int.Parse(data.CustomerId));
+
+            if (user == null)
+                return (null, NotFound().StatusCode, "User not found");
+
+            RentalOfferFront newOffer = new RentalOfferFront()
+            {
+                userId = int.Parse(data.CustomerId),
+                carId = int.Parse(data.CarId),
+                dailyRate = Count.CalculateDailyCarRate(new CarDto(car), new UserDto(user)),
+                insuranceRate = Count.CalculateDailyInsuranceRate(new CarDto(car), new UserDto(user)),
+                validUntil = DateTime.UtcNow.AddMinutes(10),
+                isActive = true,
+            };
+
+            return (newOffer , Ok().StatusCode , null);
         }
 
         [Authorize]
@@ -295,18 +315,41 @@ namespace WebApplication1.Controllers
                 //}
         }
 
-        [HttpGet("rentlink/{Offerid}/{Userid}/{PlannedStartDate}/{PlannedEndDate}")]
-        public async Task<ActionResult<RentalRequestDto>> GetRent(int Offerid , int Userid , string PlannedStartDate , string PlannedEndDate)
+        public async Task<(RentalDto? data , int statusCode, string? content)> GetRentRental1(RentalRequestFront data)
         {
-            RentalRequestFront data = new RentalRequestFront() 
+            var RentalObj = new RentalRequestDto(data);
+
+            var request = new HttpRequestMessage(HttpMethod.Post, forwordURL + "/api/customer/rentals")
             {
-                OfferId = $"{Offerid}",
-                CustomerId = $"{Userid}",
-                PlannedStartDate = PlannedStartDate,
-                PlannedEndDate = PlannedEndDate
+                Content = new StringContent(
+                Newtonsoft.Json.JsonConvert.SerializeObject(RentalObj),
+                System.Text.Encoding.UTF8,
+                "application/json")
             };
 
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
+
+            //return Ok(RentalObj)
+
+            HttpResponseMessage response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
+
+
+            if ((int)response.StatusCode != 200)
+                return (null , (int)response.StatusCode, await response.Content.ReadAsStringAsync());
+
+            var responseContent = await response.Content.ReadFromJsonAsync<RentalDto>();
+
+            if (!EmailSender.SendRentEmail(_context.GetUserEmailById(int.Parse(data.CustomerId))))
+                return (null , BadRequest().StatusCode , "Email didnt sent");
+
+            return (responseContent, Ok().StatusCode , "Rental succesful!\n");
+        }
+
+        public async Task<(RentalDto? data, int statusCode, string? content)> GetRentRental2(RentalRequestFront data)
+        {
+            if (_context.FindUserById(int.Parse(data.CustomerId)) == null)
+                return (null , BadRequest().StatusCode , "User with given ID does not exists");
 
             var RentalObj = new RentalRequestDto(data);
 
@@ -327,46 +370,84 @@ namespace WebApplication1.Controllers
 
 
             if ((int)response.StatusCode != 200)
-                return StatusCode((int)response.StatusCode, response.Content.ReadAsStringAsync());
+                return (null, (int)response.StatusCode, await response.Content.ReadAsStringAsync());
+
+            var responseContent = await response.Content.ReadFromJsonAsync<RentalDto>();
 
             if (!EmailSender.SendRentEmail(_context.GetUserEmailById(int.Parse(data.CustomerId))))
-                return BadRequest("Email didnt sent");
+                return (null, BadRequest().StatusCode, "Email didnt sent");
 
-            return Ok("Rental succesful!\n");
+            return (responseContent, Ok().StatusCode, "Rental succesful!\n");
+        }
+
+
+        [HttpGet("rentlink/{Offerid}/{Userid}/{PlannedStartDate}/{PlannedEndDate}/{RentalName}")]
+        public async Task<ActionResult<RentalRequestDto>> GetRent(int Offerid , int Userid , string PlannedStartDate , string PlannedEndDate , string RentalName)
+        {
+            if (RentalName == Constants.RentalName)
+            {
+                RentalRequestFront data = new RentalRequestFront()
+                {
+                    OfferId = $"{Offerid}",
+                    CustomerId = $"{Userid}",
+                    PlannedStartDate = PlannedStartDate,
+                    PlannedEndDate = PlannedEndDate
+                };
+
+                var responce1 = await GetRentRental1(data);
+
+                if (responce1.statusCode != 200)
+                    return StatusCode(responce1.statusCode, responce1.content);
+
+                return Ok(responce1.content);
+            }
+            else if (RentalName == Constants.RentalName2)
+            {
+                return NotFound("Work in progress");
+            }
+            else
+                return BadRequest("Wrong rental name");
         }
 
         [Authorize]
         [HttpPost("rent")]
         public async Task<ActionResult<RentalToFront>> GetRent([FromBody] RentalRequestFront data)
         {
-            if (_context.FindUserById(int.Parse(data.CustomerId)) == null)
-                return BadRequest("User with given ID does not exists");
+            var responce1 = await GetRentRental1(data);
 
-            var RentalObj = new RentalRequestDto(data);
+            if (responce1.statusCode != 200)
+                return StatusCode(responce1.statusCode, responce1.content);
 
-            var request = new HttpRequestMessage(HttpMethod.Post, forwordURL + "/api/customer/rentals")
-            {
-                Content = new StringContent(
-                Newtonsoft.Json.JsonConvert.SerializeObject(RentalObj),
-                System.Text.Encoding.UTF8,
-                "application/json")
-            };
+            return Ok(new RentalToFront(responce1.data));  
 
-            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            //if (_context.FindUserById(int.Parse(data.CustomerId)) == null)
+            //    return BadRequest("User with given ID does not exists");
 
-            HttpResponseMessage response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
+            //var RentalObj = new RentalRequestDto(data);
 
-            if((int)response.StatusCode != 200)
-                return StatusCode((int)response.StatusCode, response.Content.ReadAsStringAsync());
+            //var request = new HttpRequestMessage(HttpMethod.Post, forwordURL + "/api/customer/rentals")
+            //{
+            //    Content = new StringContent(
+            //    Newtonsoft.Json.JsonConvert.SerializeObject(RentalObj),
+            //    System.Text.Encoding.UTF8,
+            //    "application/json")
+            //};
 
-            
-             
-            if(!EmailSender.SendRentEmail(_context.GetUserEmailById(int.Parse(data.CustomerId))))
-                return BadRequest("Email didnt sent");
+            //request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
-            var responseContent = await response.Content.ReadFromJsonAsync<RentalDto>();
+            //HttpResponseMessage response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
 
-            return Ok(new RentalToFront(responseContent));
+            //if((int)response.StatusCode != 200)
+            //    return StatusCode((int)response.StatusCode, response.Content.ReadAsStringAsync());
+
+
+
+            //if(!EmailSender.SendRentEmail(_context.GetUserEmailById(int.Parse(data.CustomerId))))
+            //    return BadRequest("Email didnt sent");
+
+            //var responseContent = await response.Content.ReadFromJsonAsync<RentalDto>();
+
+            //return Ok(new RentalToFront(responseContent));
         }
 
         [Authorize]
