@@ -93,6 +93,14 @@ namespace WebApplication1.Models
                 return tmp[0];
         }
     }
+
+    public static class DataTimeExtension
+    {
+        public static string DateOnly(this DateTime data)
+        {
+            return $"{data.Day}-{data.Month}-{data.Year}";
+        }
+    }
     public static class Count
     {
 

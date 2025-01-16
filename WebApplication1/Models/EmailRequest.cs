@@ -5,6 +5,7 @@ using MailKit.Net.Smtp;
 using Microsoft.VisualStudio.Web.CodeGenerators.Mvc.Templates.BlazorIdentity.Pages.Manage;
 using System.IO;
 using System;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 //using System.Net;
 
 namespace WebApplication1.Models
@@ -39,7 +40,7 @@ namespace WebApplication1.Models
             };
             return SendEmail(emailR);
         }
-        public static bool SendReturnStartEmail(string email)
+        public static bool SendReturnStartEmail(string email , ReturnRecordDto data)
         {
             var emailR = new EmailRequest()
             {
@@ -53,7 +54,7 @@ namespace WebApplication1.Models
             return SendEmail(emailR);
         }
 
-        public static bool SendRentEmail(string email)
+        public static bool SendRentEmail(string email , RentalDto rental , Car car)
         {
             var emailR = new EmailRequest()
             {
@@ -61,8 +62,16 @@ namespace WebApplication1.Models
                 Subject = "New Rent",
                 Body = new TextPart("plain")
                 {
-                    Text = "Your new car has been rent for you!\n"
-                },
+                    Text = "Your new car has been rented for you!\n\n" +
+                    $"Car model: {car.model}\n" +
+                    $"Producer: {car.producer}\n" +
+                    $"Type: {car.type}\n\n" +
+                    $"Rentals details:\n" +
+                    $"Start date: {rental.startDate.DateOnly()}\n" +
+                    $"End date: {rental.endDate.DateOnly()}\n" +
+                    $"Start location: {rental.startLocation}\n" +
+                    $"End location: {rental.endLocation}\n"
+        },
             };
             return SendEmail(emailR);
         }

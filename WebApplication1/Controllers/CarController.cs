@@ -295,30 +295,6 @@ namespace WebApplication1.Controllers
             }
             else
                 return BadRequest("Wrong rental name");
-
-            //var RespCars1 = await GetCarsRen1();
-
-                //if (RespCars1.statusCode != 200 || RespCars1.cars == null)
-                //    return StatusCode(RespCars1.statusCode, RespCars1.resault);
-
-                //var RespCars2 = await GetCarsRen2();
-
-                //if (RespCars2.statusCode != 200 || RespCars2.cars == null)
-                //    return StatusCode(RespCars2.statusCode, RespCars2.resault);
-
-                //if (RespCars1.cars.FindCarById(data.CarId) != null)
-                //{
-                //    var responce1 = await GetOfferRent1(data);
-
-                //    if (responce1.statusCode != 200 || responce1.content == null)
-                //        return StatusCode(responce1.statusCode, responce1.resault);
-
-                //    return Ok(responce1.content);
-                //}
-                //else if(RespCars2.cars.FindCarById(data.CarId) != null)
-                //{
-
-                //}
         }
 
         public async Task<(RentalDto? data , int statusCode, string? content)> GetRentRental1(RentalRequestFront data)
@@ -335,9 +311,6 @@ namespace WebApplication1.Controllers
 
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
-
-            //return Ok(RentalObj)
-
             HttpResponseMessage response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
 
 
@@ -346,7 +319,12 @@ namespace WebApplication1.Controllers
 
             var responseContent = await response.Content.ReadFromJsonAsync<RentalDto>();
 
-            if (!EmailSender.SendRentEmail(_context.GetUserEmailById(int.Parse(data.CustomerId))))
+            var CarResponce = await GetCar(responseContent.carId);
+
+            if (CarResponce.statusCode != 200 || CarResponce.car == null)
+                return (null, CarResponce.statusCode, "Car was not found\n" + CarResponce.content);
+
+            if (!EmailSender.SendRentEmail(_context.GetUserEmailById(int.Parse(data.CustomerId)) , responseContent , CarResponce.car))
                 return (null , BadRequest().StatusCode , "Email didnt sent");
 
             return (responseContent, Ok().StatusCode , "Rental succesful!\n");
@@ -449,10 +427,10 @@ namespace WebApplication1.Controllers
             if ((int)response.StatusCode != 200)
                 return (null , (int)response.StatusCode, await response.Content.ReadAsStringAsync());
 
-            if (!EmailSender.SendReturnStartEmail(_context.GetUserEmailById(int.Parse(data.UserId))))
-                return (null , BadRequest().StatusCode , "Email was not send");
-
             var responseContent = await response.Content.ReadFromJsonAsync<ReturnRecordDto>();
+
+            if (!EmailSender.SendReturnStartEmail(_context.GetUserEmailById(int.Parse(data.UserId)) , responseContent))
+                return (null , BadRequest().StatusCode , "Email was not send");
 
             return (responseContent ,  Ok().StatusCode, null);
         }
