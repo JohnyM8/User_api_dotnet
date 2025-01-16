@@ -712,13 +712,38 @@ namespace WebApplication1.Controllers
         }
 
 
+        [HttpPost("rental/confirmation")]
+        public async Task<ActionResult<string>> Conf([FromBody] ReturnConfReq data)
+        {
+            if (data.OfferId != null)
+            {
+                if (!EmailSender.SendRentEmail(_context.GetUserEmailById((int)data.OfferId), null , null))
+                    return BadRequest("Email didnt sent");
+
+                return Ok();
+            }
+            else
+                return BadRequest();
+        }
+
+
+
         [HttpPost("return/confirmation")]
         public async Task<ActionResult<string>> ConfReturn([FromBody] ReturnConfReq data)
         {
-            if (!EmailSender.SendReturnEndEmail(_context.GetUserEmailById(data.UserId) , data))
-                return BadRequest("Email didnt sent");
+            if (data.UserId != null)
+            {
+                if (!EmailSender.SendReturnEndEmail(_context.GetUserEmailById((int)data.UserId), data))
+                    return BadRequest("Email didnt sent");
 
-            return Ok();
+                return Ok();
+            }
+            else if (data.OfferId != null)
+            {
+                return NotFound("");
+            }
+            else
+                return BadRequest();
         }
 
 

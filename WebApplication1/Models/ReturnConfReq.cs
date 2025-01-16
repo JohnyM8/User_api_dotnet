@@ -20,8 +20,9 @@ namespace WebApplication1.Models
     }
     public class ReturnConfReq
     {
-        public int UserId { get; set; }
-        public string EmployeeNotes { get; set; }
-        public DateTime ReturnDate { get; set; }
+        public int? UserId { get; set; }
+        public string? EmployeeNotes { get; set; }
+        public DateTime? ReturnDate { get; set; }
+        public int? OfferId { get; set; }
     }
 }
