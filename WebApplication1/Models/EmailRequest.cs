@@ -54,7 +54,7 @@ namespace WebApplication1.Models
             return SendEmail(emailR);
         }
 
-        public static bool SendRentEmail(string email , RentalDto rental , Car car)
+        public static bool SendRentEmail(string email , RentalDto? rental , Car? car)
         {
             var emailR = new EmailRequest()
             {
