@@ -128,7 +128,7 @@ namespace WebApplication1.Models
 
             string websiteUrl = $"https://user-api-dotnet.azurewebsites.net/api/cars/rentlink/{rental.Id}/{offer.CustomerId}/" +
                 $"{offer.PlannedStartDate.Year}.{offer.PlannedStartDate.Month}.{offer.PlannedStartDate.Day}/" +
-                $"{offer.PlannedEndDate.Year}.{offer.PlannedEndDate.Month}.{offer.PlannedEndDate.Day}" +
+                $"{offer.PlannedEndDate.Year}.{offer.PlannedEndDate.Month}.{offer.PlannedEndDate.Day}/" +
                 $"{offer.RentalName}";
 
             // websiteUrl = $"https://user-api-dotnet.azurewebsites.net/api/cars/rentlink/1/1/2025.2.2/2025.3.3";

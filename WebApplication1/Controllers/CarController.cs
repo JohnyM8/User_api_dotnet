@@ -236,12 +236,12 @@ namespace WebApplication1.Controllers
             var responseContent = await response.Content.ReadFromJsonAsync<IEnumerable<CarDto2>>();
 
             if (responseContent == null)
-                return (null, NotFound().StatusCode, "Car not found");
+                return (null, NotFound().StatusCode, "Cars not found");
 
             var car = responseContent.ConvertToCar().FindCarById(data.CarId);
 
             if(car == null)
-                return(null, NotFound().StatusCode, "Car not found");
+                return(null, NotFound().StatusCode, "Car is not available at given timespan");
 
             var user = _context.FindUserById(int.Parse(data.CustomerId));
 
@@ -357,33 +357,7 @@ namespace WebApplication1.Controllers
             if (_context.FindUserById(int.Parse(data.CustomerId)) == null)
                 return (null , BadRequest().StatusCode , "User with given ID does not exists");
 
-            var RentalObj = new RentalRequestDto(data);
-
-            var request = new HttpRequestMessage(HttpMethod.Post, forwordURL + "/api/customer/rentals")
-            {
-                Content = new StringContent(
-                Newtonsoft.Json.JsonConvert.SerializeObject(RentalObj),
-                System.Text.Encoding.UTF8,
-                "application/json")
-            };
-
-            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
-
-
-            //return Ok(RentalObj)
-
-            HttpResponseMessage response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
-
-
-            if ((int)response.StatusCode != 200)
-                return (null, (int)response.StatusCode, await response.Content.ReadAsStringAsync());
-
-            var responseContent = await response.Content.ReadFromJsonAsync<RentalDto>();
-
-            if (!EmailSender.SendRentEmail(_context.GetUserEmailById(int.Parse(data.CustomerId))))
-                return (null, BadRequest().StatusCode, "Email didnt sent");
-
-            return (responseContent, Ok().StatusCode, "Rental succesful!\n");
+            return (null, NotFound().StatusCode, "Work in progress");
         }
 
 
@@ -434,46 +408,29 @@ namespace WebApplication1.Controllers
         [HttpPost("rent")]
         public async Task<ActionResult<RentalToFront>> GetRent([FromBody] RentalRequestFront data)
         {
-            var responce1 = await GetRentRental1(data);
+            if (data.RentalName == Constants.RentalName)
+            {
+                var responce1 = await GetRentRental1(data);
 
-            if (responce1.statusCode != 200)
-                return StatusCode(responce1.statusCode, responce1.content);
+                if (responce1.statusCode != 200)
+                    return StatusCode(responce1.statusCode, responce1.content);
 
-            return Ok(new RentalToFront(responce1.data));  
+                return Ok(new RentalToFront(responce1.data));
+            }
+            else if (data.RentalName == Constants.RentalName2)
+            {
+                var responce1 = await GetRentRental2(data);
 
-            //if (_context.FindUserById(int.Parse(data.CustomerId)) == null)
-            //    return BadRequest("User with given ID does not exists");
+                if (responce1.statusCode != 200)
+                    return StatusCode(responce1.statusCode, responce1.content);
 
-            //var RentalObj = new RentalRequestDto(data);
-
-            //var request = new HttpRequestMessage(HttpMethod.Post, forwordURL + "/api/customer/rentals")
-            //{
-            //    Content = new StringContent(
-            //    Newtonsoft.Json.JsonConvert.SerializeObject(RentalObj),
-            //    System.Text.Encoding.UTF8,
-            //    "application/json")
-            //};
-
-            //request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
-
-            //HttpResponseMessage response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
-
-            //if((int)response.StatusCode != 200)
-            //    return StatusCode((int)response.StatusCode, response.Content.ReadAsStringAsync());
-
-
-
-            //if(!EmailSender.SendRentEmail(_context.GetUserEmailById(int.Parse(data.CustomerId))))
-            //    return BadRequest("Email didnt sent");
-
-            //var responseContent = await response.Content.ReadFromJsonAsync<RentalDto>();
-
-            //return Ok(new RentalToFront(responseContent));
+                return Ok(new RentalToFront(responce1.data));
+            }
+            else
+                return BadRequest("Wrong rental name");
         }
 
-        [Authorize]
-        [HttpPost("return")]
-        public async Task<ActionResult<ReturnRecordDto>> ReturnCar([FromBody] ReturnRequestFront data)
+        public async Task<(ReturnRecordDto? data, int statusCode , string? content)> ReturnCarRen1( ReturnRequestFront data)
         {
             var RentalObj = new ReturnRequestDto(data);
 
@@ -490,14 +447,45 @@ namespace WebApplication1.Controllers
             HttpResponseMessage response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead);
 
             if ((int)response.StatusCode != 200)
-                return StatusCode((int)response.StatusCode, response.Content.ReadAsStringAsync());
+                return (null , (int)response.StatusCode, await response.Content.ReadAsStringAsync());
 
             if (!EmailSender.SendReturnStartEmail(_context.GetUserEmailById(int.Parse(data.UserId))))
-                return BadRequest("Email didnt sent");
+                return (null , BadRequest().StatusCode , "Email was not send");
 
             var responseContent = await response.Content.ReadFromJsonAsync<ReturnRecordDto>();
 
-            return StatusCode((int)response.StatusCode, responseContent);
+            return (responseContent ,  Ok().StatusCode, null);
+        }
+
+        public async Task<(ReturnRecordDto? data, int statusCode, string? content)> ReturnCarRen2(ReturnRequestFront data)
+        {
+            return (null, NotFound().StatusCode, "Work in progress");
+        }
+
+        [Authorize]
+        [HttpPost("return")]
+        public async Task<ActionResult<ReturnRecordDto>> ReturnCar([FromBody] ReturnRequestFront data)
+        {
+            if(data.RentalName == Constants.RentalName)
+            {
+                var responce = await ReturnCarRen1(data);
+
+                if (responce.statusCode != 200)
+                    return StatusCode(responce.statusCode, responce.content);
+
+                return Ok(responce.data);
+            }
+            else if(data.RentalName == Constants.RentalName2)
+            {
+                var responce = await ReturnCarRen2(data);
+
+                if (responce.statusCode != 200)
+                    return StatusCode(responce.statusCode, responce.content);
+
+                return Ok(responce.data);
+            }
+            else
+                return BadRequest("Wrong rental name");
         }
 
         [HttpPost("rentedCars")]
