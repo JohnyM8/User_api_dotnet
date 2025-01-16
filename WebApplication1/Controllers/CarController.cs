@@ -180,6 +180,8 @@ namespace WebApplication1.Controllers
 
             var newOffer = new RentalOfferFront(responseContent);
 
+            //newOffer.validUntil = DateTime.UtcNow.AddMinutes(10);
+
             newOffer.userId = data.CustomerId;
 
             return StatusCode((int)response.StatusCode, newOffer);
@@ -195,7 +197,6 @@ namespace WebApplication1.Controllers
                 PlannedStartDate = PlannedStartDate,
                 PlannedEndDate = PlannedEndDate
             };
-
             
 
             var request = new HttpRequestMessage(HttpMethod.Post, forwordURL + "/api/customer/rentals");

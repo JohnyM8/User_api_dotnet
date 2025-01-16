@@ -95,11 +95,15 @@ namespace WebApplication1.Models
                     document.Add(new Paragraph($"\nRental Planned Start Date: {offer.PlannedStartDate:dd-MM-yyyy}"));
                     document.Add(new Paragraph($"Rental Planned End Date: {offer.PlannedEndDate:dd-MM-yyyy}"));
 
+                    int totalDays = offer.PlannedEndDate.DayOfYear > offer.PlannedStartDate.DayOfYear ? offer.PlannedEndDate.DayOfYear - offer.PlannedStartDate.DayOfYear :
+                        DateTime.Parse($"{offer.PlannedStartDate.Year}.12.31").DayOfYear - offer.PlannedStartDate.DayOfYear + offer.PlannedEndDate.DayOfYear;
+
+                    document.Add(new Paragraph($"Total number of days: {totalDays}"));
 
                     // Dodanie podsumowania
                     document.Add(new Paragraph("\n--- Summary ---")
                         );
-                    document.Add(new Paragraph($"Total Price for 1 day (incl. insurance): ${(dailyRate + insuranceRate):F2}\n")
+                    document.Add(new Paragraph($"Total Price (incl. insurance): ${(totalDays * dailyRate + insuranceRate):F2}\n")
                         .SetMarginBottom(20));
 
                     document.Add(new Paragraph("\nWould you like you like to rent the car?\n"));
