@@ -18,6 +18,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using static System.Runtime.InteropServices.JavaScript.JSType;
+using Microsoft.VisualStudio.Web.CodeGenerators.Mvc.Templates.BlazorIdentity.Pages.Manage;
 
 namespace WebApplication1.Controllers
 {
@@ -51,6 +52,24 @@ namespace WebApplication1.Controllers
             // Utworzenie/znalezienie użytkownika
             var user = _context.FindByEmail(googleUserInfo.Email!);
 
+            var flagNullUser = user == null;
+
+            if (flagNullUser)
+            {
+                
+                var newUser = new User()
+                {
+                    email = googleUserInfo.Email,
+                    firstname = googleUserInfo.Name
+                };
+                _context.Users.Add(newUser);
+                await _context.SaveChangesAsync();
+
+                user = _context.FindByEmail(googleUserInfo.Email);
+            }
+
+            googleUserInfo.Sub = $"{user.id}";
+
             // Wygenerowanie tokenu JWT
             var token = TokenManager.GenerateJwtToken(_configuration);
 
@@ -58,7 +77,7 @@ namespace WebApplication1.Controllers
             {
                 Token = token,
                 User = new UserDtoGoogle(googleUserInfo),
-                IsNewUser = user == null,
+                IsNewUser = flagNullUser,
             });
         }
 
@@ -69,30 +88,59 @@ namespace WebApplication1.Controllers
             if (_context.FindByLogin(request.login) != null)
                 return BadRequest("User with that login arleady exists");
 
-            if (_context.FindByEmail(request.Email) != null)
-                return BadRequest("User with that email arleady exists");
+            var user = _context.FindByEmail(request.Email);
 
-            User newUser = new User()
-            {
-                login = request.login,
-                password = "",
-                email = request.Email,
-                firstname = request.firstname,
-                lastname = request.lastname,
-                rentalService = Constants.RentalName,
-                birthday = request.birthday,
-                driverLicenseReceiveDate = request.driverLicenseReceiveDate,
-            };
+            if (user == null)
+                return BadRequest("No user with that email");
+            else if (user.birthday != "" && user.birthday != null)
+                return BadRequest("This user have all data");
 
-            _context.Users.Add(newUser);
+
+
+            user.login = request.login;
+            user.password = "";
+            user.lastname = request.lastname;
+            user.rentalService = Constants.RentalName;
+            user.birthday = request.birthday;
+            user.driverLicenseReceiveDate = request.driverLicenseReceiveDate;
+
+            //_context.Users.Add(newUser);
             await _context.SaveChangesAsync();
 
             return Ok(new AuthRegisterResponse()
             {
-                User = newUser,
+                User = user,
                 IsProfileComplete = true
             });
         }
+
+        [Authorize]
+        [HttpPost("google/reset")]
+        public async Task<ActionResult<TokenResetResponse>> TokenReset()
+        {
+            // Wygenerowanie tokenu JWT
+            var token = TokenManager.GenerateJwtToken(_configuration);
+
+            return Ok(new TokenResetResponse
+            {
+                Token = token,
+            });
+        }
+
+        [Authorize]
+        [HttpGet("{id}")]
+        public async Task<ActionResult<UserToFront>> GetUsers(int id)
+        {
+            var user = await _context.Users.FindAsync(id);
+
+            if (user == null)
+            {
+                return NotFound();
+            }
+
+            return new UserToFront(user);
+        }
+
 
 
 
@@ -100,7 +148,14 @@ namespace WebApplication1.Controllers
         //GARBAGE ONLY BELOW//
 
 
+        [HttpPost("google4")]
+        public async Task<ActionResult<UserToFront>> GoogleGetJson3([FromBody] TMP request)
+        {
+            // Weryfikacja kodu Google
+            var user = _context.FindByEmail(request.Email!);
 
+            return Ok(user);
+        }
 
 
         [HttpPost("google2")]
@@ -244,19 +299,7 @@ namespace WebApplication1.Controllers
         }
 
         // GET: api/Users/5
-        [Authorize]
-        [HttpGet("{id}")]
-        public async Task<ActionResult<User>> GetUsers(int id)
-        {
-            var user = await _context.Users.FindAsync(id);
-
-            if (user == null)
-            {
-                return NotFound();
-            }
-
-            return user;
-        }
+        
 
         // PUT: api/Users/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754

@@ -4,6 +4,8 @@ using MailKit.Net.Smtp;
 //using System.Net.Mail;
 using Microsoft.VisualStudio.Web.CodeGenerators.Mvc.Templates.BlazorIdentity.Pages.Manage;
 using System.IO;
+using System;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 //using System.Net;
 
 namespace WebApplication1.Models
@@ -23,7 +25,22 @@ namespace WebApplication1.Models
     }
     public static class EmailSender
     {
-        public static bool SendReturnStartEmail(string email)
+        public static bool SendReturnEndEmail(string email , ReturnConfReq data)
+        {
+            var emailR = new EmailRequest()
+            {
+                To = email,
+                Subject = "Your return has been accepted!\n",
+                Body = new TextPart("plain")
+                {
+                    Text = 
+                    $"Employee notes: {data.EmployeeNotes}\n" +
+                    $"Date of return: {data.ReturnDate}"
+                },
+            };
+            return SendEmail(emailR);
+        }
+        public static bool SendReturnStartEmail(string email , ReturnRecordDto data)
         {
             var emailR = new EmailRequest()
             {
@@ -37,7 +54,7 @@ namespace WebApplication1.Models
             return SendEmail(emailR);
         }
 
-        public static bool SendRentEmail(string email)
+        public static bool SendRentEmail(string email , RentalDto rental , Car car)
         {
             var emailR = new EmailRequest()
             {
@@ -45,8 +62,16 @@ namespace WebApplication1.Models
                 Subject = "New Rent",
                 Body = new TextPart("plain")
                 {
-                    Text = "Your new car has been rent for you!\n"
-                },
+                    Text = "Your new car has been rented for you!\n\n" +
+                    $"Car model: {car.model}\n" +
+                    $"Producer: {car.producer}\n" +
+                    $"Type: {car.type}\n\n" +
+                    $"Rentals details:\n" +
+                    $"Start date: {rental.startDate.DateOnly()}\n" +
+                    $"End date: {rental.endDate.DateOnly()}\n" +
+                    $"Start location: {rental.startLocation}\n" +
+                    $"End location: {rental.endLocation}\n"
+        },
             };
             return SendEmail(emailR);
         }
@@ -132,14 +157,14 @@ namespace WebApplication1.Models
             //stream.Close();
             //File.Delete(path);
 
-            bool response = SendEmail(emailR, path);
+            bool response = SendEmail(emailR);
 
             stream.Close();
             File.Delete(path);
 
             return response;
         }
-        public static bool SendEmail(EmailRequest emailRequest , string filePath = "")
+        public static bool SendEmail(EmailRequest emailRequest)
         {
             if (string.IsNullOrEmpty(emailRequest.To) || string.IsNullOrEmpty(emailRequest.Subject))
             {

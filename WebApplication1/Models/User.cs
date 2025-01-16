@@ -58,8 +58,6 @@ namespace WebApplication1.Models
         public string? birthday { get; set; }
         public string? driverLicenseReceiveDate { get; set; }
 
-        public string? CertificateToken { get; set; }
-
         public UserToFront(User user)
         {
             this.id = user.id;
@@ -69,7 +67,7 @@ namespace WebApplication1.Models
             this.login = user.login;
             this.password = user.password;
             this.rentalService = user.rentalService;
-            //this.birthday = user.birthday;
+            this.birthday = user.birthday;
             this.driverLicenseReceiveDate = user.driverLicenseReceiveDate;
         }
     }

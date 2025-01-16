@@ -20,15 +20,15 @@ namespace WebApplication1.Models
 
     public class RentalDto
     {
-        public int Id { get; set; } // Zwracaj moje id
-        public int CarId { get; set; } // Zwracaj moje id
-        public int UserId { get; set; } // Zwracaj externalId
-        public DateTime StartDate { get; set; }
-        public DateTime EndDate { get; set; }
-        public decimal TotalPrice { get; set; }
-        public string Status { get; set; }
-        public String StartLocation { get; set; }
-        public String EndLocation { get; set; }
+        public int id { get; set; } // Zwracaj moje id
+        public int carId { get; set; } // Zwracaj moje id
+        public int userId { get; set; } // Zwracaj externalId
+        public DateTime startDate { get; set; }
+        public DateTime endDate { get; set; }
+        public decimal totalPrice { get; set; }
+        public RentalStatus status { get; set; }
+        public String startLocation { get; set; }
+        public String endLocation { get; set; }
     }
 
     public class RentalToFront
@@ -44,15 +44,15 @@ namespace WebApplication1.Models
         public string endLocation { get; set; }
         public RentalToFront(RentalDto data)
         {
-            id = data.Id;
+            id = data.id;
             //carId = data.CarId;
-            userId = data.UserId;
-            startDate = data.StartDate.ToShortDateString();
-            endDate = data.EndDate.ToShortDateString();
-            totalPrice = data.TotalPrice;
-            status = data.Status.ToString();
-            startLocation = data.StartLocation;
-            endLocation = data.EndLocation;
+            userId = data.userId;
+            startDate = data.startDate.ToShortDateString();
+            endDate = data.endDate.ToShortDateString();
+            totalPrice = data.totalPrice;
+            status = data.status.ToString();
+            startLocation = $"{data.startLocation}";
+            endLocation = $"{data.endLocation}";
         }
     }
 
