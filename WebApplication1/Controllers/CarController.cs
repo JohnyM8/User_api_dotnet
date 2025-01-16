@@ -248,15 +248,21 @@ namespace WebApplication1.Controllers
             if (user == null)
                 return (null, NotFound().StatusCode, "User not found");
 
-            RentalOfferFront newOffer = new RentalOfferFront()
+            RentalOfferDto newOfferDto = new RentalOfferDto()
             {
-                userId = int.Parse(data.CustomerId),
-                carId = int.Parse(data.CarId),
-                dailyRate = Count.CalculateDailyCarRate(new CarDto(car), new UserDto(user)),
-                insuranceRate = Count.CalculateDailyInsuranceRate(new CarDto(car), new UserDto(user)),
-                validUntil = DateTime.UtcNow.AddMinutes(10),
-                isActive = true,
+                Id = RentalOfferDto.index++,
+                Car = new CarDto(car),
+                DailyRate = Count.CalculateDailyCarRate(new CarDto(car), new UserDto(user)),
+                InsuranceRate = Count.CalculateDailyInsuranceRate(new CarDto(car), new UserDto(user)),
+                ValidUntil = DateTime.UtcNow.AddMinutes(10),
             };
+
+            if (!EmailSender.SendOfferEmail(_context.GetUserEmailById(int.Parse(data.CustomerId)), newOfferDto, RentalObj))
+                return (null, BadRequest().StatusCode, "Email wasnt send");
+
+            var newOffer = new RentalOfferFront(newOfferDto);
+
+            newOffer.userId = int.Parse(data.CustomerId);
 
             return (newOffer , Ok().StatusCode , null);
         }
@@ -390,6 +396,7 @@ namespace WebApplication1.Controllers
                 {
                     OfferId = $"{Offerid}",
                     CustomerId = $"{Userid}",
+                    RentalName = Constants.RentalName,
                     PlannedStartDate = PlannedStartDate,
                     PlannedEndDate = PlannedEndDate
                 };
@@ -403,7 +410,21 @@ namespace WebApplication1.Controllers
             }
             else if (RentalName == Constants.RentalName2)
             {
-                return NotFound("Work in progress");
+                RentalRequestFront data = new RentalRequestFront()
+                {
+                    OfferId = $"{Offerid}",
+                    CustomerId = $"{Userid}",
+                    RentalName = Constants.RentalNameTo2,
+                    PlannedStartDate = PlannedStartDate,
+                    PlannedEndDate = PlannedEndDate
+                };
+
+                var responce = await GetRentRental2(data);
+
+                if (responce.statusCode != 200)
+                    return StatusCode(responce.statusCode, responce.content);
+
+                return Ok(responce.content);
             }
             else
                 return BadRequest("Wrong rental name");

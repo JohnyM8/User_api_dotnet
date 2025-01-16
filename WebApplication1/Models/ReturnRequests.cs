@@ -14,6 +14,7 @@
         // public int Id { get; set; }
         public string UserId { get; set; }
         public string RentalId { get; set; }
+        public string RentalName { get; set; }
     }
 
     public class ReturnRecordDto

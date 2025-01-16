@@ -8,7 +8,9 @@ namespace WebApplication1.Models
     {
         public const string RentalName = "JEJ Car Rental";
 
-        public const string RentalName2 = "Some name";
+        public const string RentalName2 = "GMM Car Rental";
+
+        public const string RentalNameTo2 = "EKJCD";
     }
     public static class CarListExtensions
     {

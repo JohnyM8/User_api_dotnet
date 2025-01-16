@@ -25,8 +25,7 @@ namespace WebApplication1.Models
     {
         public string OfferId { get; set; } // Moje id
         public string CustomerId { get; set; } // External id
-
-        //public string RentalName { get; set; }
+        public string RentalName { get; set; }
         public string PlannedStartDate { get; set; }
         public string PlannedEndDate { get; set; }
     }
