@@ -13,9 +13,6 @@ namespace WebApplication1.Models
 {
     public static class TokenManager
     {
-
-        public static readonly string _secret = "Superlongsupersecretwithlongwordandmanystuff!";
-
         public static string GenerateJwtToken(IConfiguration configuration)
         {
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration.GetSection("jsonCopy:Jwt:Key").Value!));
@@ -46,29 +43,6 @@ namespace WebApplication1.Models
                 .AddClaim("username", username)
                 .Encode();
         }
-        /*
-        public static (string key, string jwt) GenerateRefreshToken(string username)
-        {
-            var randomNumber = new byte[32];
-            using (var rng = RandomNumberGenerator.Create())
-            {
-                rng.GetBytes(randomNumber);
-                Convert.ToBase64String(randomNumber);
-            }
-
-            var key = System.Text.Encoding.ASCII.GetString(randomNumber);
-
-            string jwt = new JwtBuilder()
-                .WithAlgorithm(new HMACSHA256Algorithm())
-                .WithSecret(_secret)
-                .AddClaim("exp", DateTimeOffset.UtcNow.AddHours(4).ToUnixTimeSeconds())
-                .AddClaim("refresh", randomString)
-                .AddClaim("username", username)
-                .Encode();
-
-            return (key, jwt);
-        }
-        */
 
     }
     public class TokenDto
